@@ -17,6 +17,9 @@ using i64 = int64_t;
 using f32 = float;
 using f64 = double;
 
+//for const char pointer
+using ccharp = const char *;
+
 #if defined(__clang__) || defined(__gcc__)
 #define STATIC_ASSERT _Static_assert
 #else

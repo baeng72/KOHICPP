@@ -1,0 +1,2 @@
+file(GLOB CORE_FILES "*.cpp" "*.hpp")
+set(CORE_FILES ${CORE_FILES} PARENT_SCOPE)
