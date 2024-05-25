@@ -23,6 +23,14 @@ Log* Log::instance(){
     return &s_log;
 }
 
+bool Log::initialize(){
+    return true;
+}
+
+void Log::shutdown(){
+
+}
+
 void Log::log_output(log_level level, ccharp message, ...){
     ccharp level_strings[] = {"[FATAL]: ", "[ERROR]: ", "[WARN]:  ", "[INFO]:  ", "[DEBUG]: ", "[TRACE]: "};
     bool is_error = level < LOG_LEVEL_WARN;
@@ -42,11 +50,7 @@ void Log::log_output(log_level level, ccharp message, ...){
     }else{
         platform_console_write(log_buffer, level);
     }
-    
-    
-
-    printf("%s\n",log_buffer);
-    
+   
 };
 
 

@@ -3,6 +3,9 @@ project(KOHICPP VERSION 0.1.0 LANGUAGES C CXX)
 if(WIN32)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS -DVK_USE_PLATFORM_WIN32_KHR -DNOMINMAX -DKPLATFORM_GLFW)
 endif()
-add_executable(TESTBED main.cpp)
+
+file(GLOB TESTBED_FILES "*.cpp" "*.hpp")
+set(TESTBED_FILES ${TESTBED_FILES} PARENT_SCOPE)
+add_executable(TESTBED ${TESTBED_FILES})
 
 target_link_libraries(TESTBED KOHICPP)

@@ -26,6 +26,8 @@ struct KAPI Log{
     static Log* instance();
     Log();
     ~Log();
+    bool initialize();
+    void shutdown();
     void log_output(log_level level, ccharp message,...);
 };
 
