@@ -1,5 +1,6 @@
 #include "logger.hpp"
 #include "asserts.hpp"
+#include "platform/platform.hpp"
 
 #include <cstdio>
 
@@ -24,7 +25,8 @@ Log* Log::instance(){
 
 void Log::log_output(log_level level, ccharp message, ...){
     ccharp level_strings[] = {"[FATAL]: ", "[ERROR]: ", "[WARN]:  ", "[INFO]:  ", "[DEBUG]: ", "[TRACE]: "};
-    
+    bool is_error = level < LOG_LEVEL_WARN;
+
     strcpy_s(log_buffer,k_log_size,level_strings[level]);
     va_list args;
     va_start( args, message );
@@ -34,6 +36,12 @@ void Log::log_output(log_level level, ccharp message, ...){
     vsnprintf( log_buffer, k_log_size, format, args );
 #endif
     va_end(args);
+
+    if(is_error){
+        platform_console_write_error(log_buffer,level);
+    }else{
+        platform_console_write(log_buffer, level);
+    }
     
     
 
