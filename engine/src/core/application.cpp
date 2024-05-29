@@ -4,6 +4,7 @@
 #include "logger.hpp"
 
 #include "platform/platform.hpp"
+#include "core/kmemory.hpp"
 
 struct application_state{
     game*game_inst;
@@ -55,6 +56,7 @@ bool application::create(game*game_inst){
 }
 
 bool application::run(){
+    KINFO(get_memory_usage_str());
     while(app_state.is_running){
         if(!app_state.platform.pump_messages()){
             app_state.is_running = false;

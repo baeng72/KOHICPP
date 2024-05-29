@@ -11,6 +11,18 @@
 			"group": "build",
 			"problemMatcher": [],
 			"detail": "CMake template build task"
+		},
+		
+		{
+			"type": "cmake",
+			"label": "CMake: clean rebuild",
+			"command": "cleanRebuild",
+			"targets": [
+				"ALL_BUILD"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"detail": "CMake template clean rebuild task"
 		}
 	]
 }
