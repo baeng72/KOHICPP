@@ -21,7 +21,7 @@ add_subdirectory(core)
 add_subdirectory(platform)
 add_definitions(-DKEXPORT)
 
-add_library(KOHICPP SHARED ${SRC_FILES} ${CORE_FILES} ${PLATFORM_FILES})
+add_library(KOHICPP SHARED ${SRC_FILES} ${CORE_FILES} ${PLATFORM_FILES} ${CONTAINER_FILES})
 
 target_link_libraries(KOHICPP glfw)
 

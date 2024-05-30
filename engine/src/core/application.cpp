@@ -5,6 +5,7 @@
 
 #include "platform/platform.hpp"
 #include "core/kmemory.hpp"
+#include "core/event.hpp"
 
 struct application_state{
     game*game_inst;
@@ -21,7 +22,7 @@ static application_state app_state;
 
 bool application::create(game*game_inst){
     if(initialized){
-        KERROR("application::create called more than once.");
+        KERROR("application::create called more than once.\n");
         return false;
     }
 
@@ -32,6 +33,11 @@ bool application::create(game*game_inst){
 
     app_state.is_running=true;
     app_state.is_suspended=false;
+    
+    if(!events.initialize()){
+        KERROR("Event system failed initialization. Application cannot continue.\n");
+        return false;
+    }
 
     if(!app_state.platform.startup(
         game_inst->app_config.name,
@@ -44,7 +50,7 @@ bool application::create(game*game_inst){
 
     //initialize the game
     if(!app_state.game_inst->initialize()){
-        KFATAL("Game failed to initialize.");
+        KFATAL("Game failed to initialize.\n");
         return false;
     }
 
@@ -64,20 +70,22 @@ bool application::run(){
 
         if(!app_state.is_suspended){
             if(!app_state.game_inst->update((f32)0.f)){
-                KFATAL("Game update failed, shutting down.");
+                KFATAL("Game update failed, shutting down.\n");
                 app_state.is_running = false;
                 break;
             }
 
             //call the game's render routine
             if(!app_state.game_inst->render((f32)0.f)){
-                KFATAL("Game render failed, shutting down.");
+                KFATAL("Game render failed, shutting down.\n");
                 app_state.is_running = false;
                 break;
             }
         }
     }
     app_state.is_running=false;
+
+    events.shutdown();
 
     app_state.platform.shutdown();
 

@@ -3,7 +3,7 @@
 #include <core/logger.hpp>
 
 bool testgame::initialize(){
-    KDEBUG("game_initialize() called!");
+    KDEBUG("game_initialize() called!\n");
     return true;
 }
 
@@ -16,5 +16,5 @@ bool testgame::render(f32 delta_time){
 }
 
 void testgame::on_resize(u32 width, u32 height){
-    
+
 }
