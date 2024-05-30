@@ -1,7 +1,8 @@
 #pragma once
 
 #include "defines.hpp"
-#include "core/event.hpp"
+
+#include "core/input.hpp"
 
 struct application_config{
     i16 start_pos_x;
@@ -13,8 +14,8 @@ struct application_config{
 
 struct game;
 
-class KAPI application{    
-    event_system events;
+class KAPI application{        
+    input input;
     public:
     bool create(game*game_inst);
     bool run();

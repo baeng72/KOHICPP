@@ -7,6 +7,7 @@
 #include "core/kmemory.hpp"
 #include "core/event.hpp"
 
+
 struct application_state{
     game*game_inst;
     bool is_running;
@@ -30,11 +31,13 @@ bool application::create(game*game_inst){
 
     //initialize subsystems
     Log::instance()->initialize();
+    
+    input.initialize();
 
     app_state.is_running=true;
     app_state.is_suspended=false;
     
-    if(!events.initialize()){
+    if(!event_initialize()){
         KERROR("Event system failed initialization. Application cannot continue.\n");
         return false;
     }
@@ -81,12 +84,14 @@ bool application::run(){
                 app_state.is_running = false;
                 break;
             }
+
+            input.update(0);
         }
     }
     app_state.is_running=false;
 
-    events.shutdown();
-
+    event_shutdown();
+    input.shutdown();
     app_state.platform.shutdown();
 
     return true;

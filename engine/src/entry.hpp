@@ -17,7 +17,7 @@ int main(void){
 
     application app;
     if(!app.create(pgame)){
-        KINFO("Application failed to create!");
+        KFATAL("Application failed to create!");
         return 1;
     }
 
