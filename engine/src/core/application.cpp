@@ -31,7 +31,7 @@ bool application_on_key(u16 code, void* sender, void* listener_inst, event_conte
 
 bool application::create(game*game_inst){
     if(initialized){
-        KERROR("application::create called more than once.\n");
+        KERROR("application::create called more than once.");
         return false;
     }
 
@@ -46,7 +46,7 @@ bool application::create(game*game_inst){
     app_state.is_suspended=false;
     
     if(!event_initialize()){
-        KERROR("Event system failed initialization. Application cannot continue.\n");
+        KERROR("Event system failed initialization. Application cannot continue.");
         return false;
     }
 
@@ -64,13 +64,13 @@ bool application::create(game*game_inst){
     }
 
     if(!app_state.renderer.initialize(game_inst->app_config.name,&app_state.platform)){
-        KFATAL("Failed to initialize renderer. Aborting application\n");
+        KFATAL("Failed to initialize renderer. Aborting application");
         return false;
     }
 
     //initialize the game
     if(!app_state.game_inst->initialize()){
-        KFATAL("Game failed to initialize.\n");
+        KFATAL("Game failed to initialize.");
         return false;
     }
 
@@ -102,14 +102,14 @@ bool application::run(){
             f64 frame_start_time = platform_get_absolute_time();
 
             if(!app_state.game_inst->update((f32)delta)){
-                KFATAL("Game update failed, shutting down.\n");
+                KFATAL("Game update failed, shutting down.");
                 app_state.is_running = false;
                 break;
             }
 
             //call the game's render routine
             if(!app_state.game_inst->render((f32)delta)){
-                KFATAL("Game render failed, shutting down.\n");
+                KFATAL("Game render failed, shutting down.");
                 app_state.is_running = false;
                 break;
             }
@@ -153,7 +153,7 @@ bool application::run(){
 bool application::on_event(u16 code, void* sender, void*listener_inst, event_context&context){
     switch(code){
         case EVENT_CODE_APPLICATION_QUIT:{
-            KINFO("EVENT_CODE_APPLICATION_QUIT received, shutting down.\n");
+            KINFO("EVENT_CODE_APPLICATION_QUIT received, shutting down.");
             app_state.is_running = false;
             return true;
         }
@@ -172,17 +172,17 @@ bool application::on_key(u16 code, void* sender, void *listener_inst, event_cont
         }
         else if(key_code == KEY_A){
             //Example on checking for a key
-            KDEBUG("Explicit - A key pressed!\n");            
+            KDEBUG("Explicit - A key pressed!");            
         }else{
-            KDEBUG("'%c' key pressed in window.]n",key_code);
+            KDEBUG("'%c' key pressed in window.",key_code);
         }        
     }
     else if(code == EVENT_CODE_KEY_RELEASED){
         u16 key_code = context.u16[0];
         if(key_code == KEY_B){
-            KDEBUG("Explicit - B key released!\n");
+            KDEBUG("Explicit - B key released!");
         }else{
-            KDEBUG("'%c' key released in window.\n", key_code);
+            KDEBUG("'%c' key released in window.", key_code);
         }
     }
     return false;

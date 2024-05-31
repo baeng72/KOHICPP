@@ -36,15 +36,17 @@ void Log::log_output(log_level level, ccharp message, ...){
     bool is_error = level < LOG_LEVEL_WARN;
 
     strcpy_s(log_buffer,k_log_size,level_strings[level]);
+    int len = strlen(log_buffer);
     va_list args;
     va_start( args, message );
 #if defined(_MSC_VER)
-    vsnprintf_s( log_buffer+strlen(log_buffer),k_log_size, k_log_size, message, args );
+    len += vsnprintf_s( log_buffer+len,k_log_size, k_log_size, message, args );
 #else
-    vsnprintf( log_buffer, k_log_size, format, args );
+    len += vsnprintf( log_buffer+len, k_log_size, format, args );
 #endif
     va_end(args);
-
+    log_buffer[len] = '\n';
+    log_buffer[len+1] = 0;
     if(is_error){
         platform_console_write_error(log_buffer,level);
     }else{
@@ -54,3 +56,6 @@ void Log::log_output(log_level level, ccharp message, ...){
 };
 
 
+void report_assertion_failure(ccharp expression, ccharp message, ccharp file, ccharp function, i32 line){
+    Log::instance()->log_output(LOG_LEVEL_FATAL, "Assertion Failure: %s, message: %s, in file: %s, function %s, line %d\n", expression, message, file, function, line);
+}

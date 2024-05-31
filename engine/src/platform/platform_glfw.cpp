@@ -99,6 +99,14 @@ bool platform::pump_messages(){
     return true;
 }
 
+void platform::get_required_extensions_names(darray<ccharp>&names_array){
+    u32 count = 0;
+    auto ext = glfwGetRequiredInstanceExtensions(&count);
+    for(u32 i=0;i<count;i++){
+        names_array.push(ext[i]);
+    }
+}
+
 void * platform_allocate(u64 size, bool aligned){
     return malloc(size);
 }

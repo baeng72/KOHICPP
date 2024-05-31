@@ -3,7 +3,7 @@
 #include <core/logger.hpp>
 
 bool testgame::initialize(){
-    KDEBUG("game_initialize() called!\n");
+    KDEBUG("game_initialize() called!");
     return true;
 }
 
