@@ -11,19 +11,19 @@ int main(void){
     game*pgame = create_game();
 
     if(!pgame){
-        KFATAL("Could not create game!");
+        KFATAL("Could not create game!\n");
         return -1;
     }
 
     application app;
     if(!app.create(pgame)){
-        KFATAL("Application failed to create!");
+        KFATAL("Application failed to create!\n");
         return 1;
     }
 
     //begin game loop
     if(!app.run()){
-        KINFO("Application did not shutdown gracefully.");
+        KINFO("Application did not shutdown gracefully.\n");
         return 2;
     }
 

@@ -1,0 +1,3 @@
+file(GLOB VULKAN_FILES "*.hpp" "*.cpp")
+set(VULKAN_FILES ${VULKAN_FILES} PARENT_SCOPE)
+#message(${VULKAN_FILES})

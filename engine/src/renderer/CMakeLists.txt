@@ -1,0 +1,6 @@
+file(GLOB RENDERER_FILES "*.hpp" "*.cpp")
+
+add_subdirectory(vulkan)
+set(RENDERER_FILES ${RENDERER_FILES} ${VULKAN_FILES})
+set(RENDERER_FILES ${RENDERER_FILES} PARENT_SCOPE)
+#message(${RENDERER_FILES})

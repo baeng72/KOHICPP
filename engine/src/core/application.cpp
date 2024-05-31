@@ -6,6 +6,9 @@
 #include "platform/platform.hpp"
 #include "core/kmemory.hpp"
 #include "core/event.hpp"
+#include "core/clock.hpp"
+
+#include "renderer/renderer_frontend.hpp"
 
 
 struct application_state{
@@ -13,8 +16,10 @@ struct application_state{
     bool is_running;
     bool is_suspended;
     platform platform;
+    renderer renderer;
     i16 width;
     i16 height;
+    clock clock;
     f64 last_time;
 };
 
@@ -58,6 +63,11 @@ bool application::create(game*game_inst){
         return false;
     }
 
+    if(!app_state.renderer.initialize(game_inst->app_config.name,&app_state.platform)){
+        KFATAL("Failed to initialize renderer. Aborting application\n");
+        return false;
+    }
+
     //initialize the game
     if(!app_state.game_inst->initialize()){
         KFATAL("Game failed to initialize.\n");
@@ -72,6 +82,12 @@ bool application::create(game*game_inst){
 }
 
 bool application::run(){
+    app_state.clock.start();
+    app_state.clock.update();
+    app_state.last_time = app_state.clock.elapsed;
+    f64 running_time = 0;
+    u8 frame_count = 0;
+    f64 target_frame_seconds = 1.f/60;
     KINFO(get_memory_usage_str());
     while(app_state.is_running){
         if(!app_state.platform.pump_messages()){
@@ -79,20 +95,44 @@ bool application::run(){
         }
 
         if(!app_state.is_suspended){
-            if(!app_state.game_inst->update((f32)0.f)){
+            //update clock and get delta
+            app_state.clock.update();
+            f64 current_time = app_state.clock.elapsed;
+            f64 delta = (current_time - app_state.last_time);
+            f64 frame_start_time = platform_get_absolute_time();
+
+            if(!app_state.game_inst->update((f32)delta)){
                 KFATAL("Game update failed, shutting down.\n");
                 app_state.is_running = false;
                 break;
             }
 
             //call the game's render routine
-            if(!app_state.game_inst->render((f32)0.f)){
+            if(!app_state.game_inst->render((f32)delta)){
                 KFATAL("Game render failed, shutting down.\n");
                 app_state.is_running = false;
                 break;
             }
 
-            input.update(0);
+            //Figure out how long the frame took and, if below
+            f64 frame_end_time = platform_get_absolute_time();
+            f64 frame_time_elapsed = frame_end_time - frame_start_time;
+            running_time += frame_end_time;
+            f64 remaining_seconds =target_frame_seconds - frame_time_elapsed;
+
+            if(remaining_seconds>0){
+                u64 remaining_ms = (u64)(remaining_seconds*1000);
+                //If ther is time left, give it back to OS
+                bool limit_frames = false;
+                if(remaining_ms > 0 && limit_frames){
+                    platform_sleep(remaining_ms-1);
+                }
+                frame_count++;
+            }
+
+            input.update(delta);
+
+            app_state.last_time = current_time;
         }
     }
     app_state.is_running=false;
@@ -102,6 +142,7 @@ bool application::run(){
     event_unregister(EVENT_CODE_KEY_RELEASED, 0, application::on_key);
     event_shutdown();
     input_shutdown();
+    app_state.renderer.shutdown();
     app_state.platform.shutdown();
 
     return true;
