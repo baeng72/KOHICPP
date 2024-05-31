@@ -76,3 +76,5 @@ struct KAPI Log{
 // Does nothing when LOG_TRACE_ENABLED != 1
 #define KTRACE(message, ...)
 #endif
+
+#define logger_initialize() (Log::instance()->initialize())

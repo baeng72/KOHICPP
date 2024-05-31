@@ -13,9 +13,12 @@ struct application_config{
 };
 
 struct game;
+struct event_context;
 
 class KAPI application{        
     input input;
+    static bool on_event(u16 code, void*sender, void* listener_inst, event_context& context);
+    static bool on_key(u16 code, void* sender, void* listener_inst, event_context& context);
     public:
     bool create(game*game_inst);
     bool run();

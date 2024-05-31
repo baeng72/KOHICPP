@@ -21,6 +21,9 @@ struct application_state{
 bool initialized = false;
 static application_state app_state;
 
+bool application_on_event(u16 code, void* sender, void*listener_inst, event_context&context);
+bool application_on_key(u16 code, void* sender, void* listener_inst, event_context&context);
+
 bool application::create(game*game_inst){
     if(initialized){
         KERROR("application::create called more than once.\n");
@@ -30,9 +33,9 @@ bool application::create(game*game_inst){
     app_state.game_inst = game_inst;
 
     //initialize subsystems
-    Log::instance()->initialize();
+    logger_initialize();
     
-    input.initialize();
+    input_initialize();
 
     app_state.is_running=true;
     app_state.is_suspended=false;
@@ -41,6 +44,10 @@ bool application::create(game*game_inst){
         KERROR("Event system failed initialization. Application cannot continue.\n");
         return false;
     }
+
+    event_register(EVENT_CODE_APPLICATION_QUIT, 0, application::on_event);
+    event_register(EVENT_CODE_KEY_PRESSED, 0, application::on_key);
+    event_register(EVENT_CODE_KEY_RELEASED, 0, application::on_key);
 
     if(!app_state.platform.startup(
         game_inst->app_config.name,
@@ -90,8 +97,11 @@ bool application::run(){
     }
     app_state.is_running=false;
 
+    event_unregister(EVENT_CODE_APPLICATION_QUIT,0,application::on_event);
+    event_unregister(EVENT_CODE_KEY_PRESSED, 0, application::on_key);
+    event_unregister(EVENT_CODE_KEY_RELEASED, 0, application::on_key);
     event_shutdown();
-    input.shutdown();
+    input_shutdown();
     app_state.platform.shutdown();
 
     return true;
@@ -99,3 +109,40 @@ bool application::run(){
 
 
 
+bool application::on_event(u16 code, void* sender, void*listener_inst, event_context&context){
+    switch(code){
+        case EVENT_CODE_APPLICATION_QUIT:{
+            KINFO("EVENT_CODE_APPLICATION_QUIT received, shutting down.\n");
+            app_state.is_running = false;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool application::on_key(u16 code, void* sender, void *listener_inst, event_context& context){
+    if(code == EVENT_CODE_KEY_PRESSED){
+        u16 key_code = context.u16[0];
+        if(key_code == KEY_ESCAPE){
+            event_context data{};
+            event_fire(EVENT_CODE_APPLICATION_QUIT,0,data);
+            //block anything else from processing this.
+            return true;
+        }
+        else if(key_code == KEY_A){
+            //Example on checking for a key
+            KDEBUG("Explicit - A key pressed!\n");            
+        }else{
+            KDEBUG("'%c' key pressed in window.]n",key_code);
+        }        
+    }
+    else if(code == EVENT_CODE_KEY_RELEASED){
+        u16 key_code = context.u16[0];
+        if(key_code == KEY_B){
+            KDEBUG("Explicit - B key released!\n");
+        }else{
+            KDEBUG("'%c' key released in window.\n", key_code);
+        }
+    }
+    return false;
+}

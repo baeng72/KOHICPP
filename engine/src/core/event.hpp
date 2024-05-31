@@ -89,3 +89,5 @@ enum system_event_code{
 #define event_initialize() (event_system::instance()->initialize())
 #define event_shutdown() (event_system::instance()->shutdown())
 #define event_fire(c,s,ev) (event_system::instance()->fire((c),(s),(ev)))
+#define event_register(c,l,on)(event_system::instance()->register_event((c),(l),(on)))
+#define event_unregister(c,l,on)(event_system::instance()->unregister_event((c),(l),(on)))

@@ -1,5 +1,6 @@
 #include "platform/platform.hpp"
 #include "core/logger.hpp"
+#include "core/input.hpp"
 #include <cstdlib>
 #if defined(KPLATFORM_WINDOWS)
 #define WINDOWS_LEAN_AND_MEAN
@@ -42,17 +43,29 @@ bool platform::startup(ccharp application_name, i32 x, i32 y, i32 width, i32 hei
     });
 
     glfwSetKeyCallback(pwindow,[](GLFWwindow*pwindow,i32 key, i32 scancode, i32 action, i32 mods){
-        platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
+        //platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
+        
+        keys key_val = (keys)key;
+        bool pressed = action == GLFW_PRESS;
+        input_process_key(key_val, pressed);
 
     });
-    glfwSetMouseButtonCallback(pwindow,[](GLFWwindow*pwindow,i32 buttion, i32 action, i32 mods){
-        platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
+    glfwSetMouseButtonCallback(pwindow,[](GLFWwindow*pwindow,i32 button, i32 action, i32 mods){
+        //platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
+        buttons button_val = (buttons)button;
+        bool pressed = action == GLFW_PRESS;
+        input_process_button(button_val,pressed);
     });
     glfwSetScrollCallback(pwindow,[](GLFWwindow*pwindow, f64 xoffset, f64 yoffset){
-            platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
+        //platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
+        if(yoffset != 0.0){
+        i8 z_delta = yoffset <0 ? -1 : 1;
+            input_process_mouse_wheel(z_delta);
+        }
     });
     glfwSetCursorPosCallback(pwindow,[](GLFWwindow*pwindow,f64 xpos, f64 ypos){
-        platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
+        //platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
+        input_process_mouse_move((i16)xpos,(i16)ypos);
     });
     glfwSetCharCallback(pwindow,[](GLFWwindow*pwindow, u32 keycode){
         platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
@@ -79,9 +92,10 @@ void platform::shutdown(){
 
 bool platform::pump_messages(){
     GLFWwindow*pwindow = static_cast<GLFWwindow*>(internal_state);
-    while(!glfwWindowShouldClose(pwindow)){
-        glfwPollEvents();
-    }
+    if(glfwWindowShouldClose(pwindow))
+        return false;
+    glfwPollEvents();
+    
     return true;
 }
 
@@ -140,8 +154,6 @@ f64 platform_get_absolute_time(){
     return glfwGetTime();
 #endif
 }
-
-
 
 
 #endif

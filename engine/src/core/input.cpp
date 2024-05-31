@@ -3,6 +3,12 @@
 #include "core/kmemory.hpp"
 #include "core/logger.hpp"
 
+input s_input;
+
+input* input::instance(){
+    return & s_input;
+}
+
 void input::initialize(){
     kzero_memory(&state,sizeof(state));
     initialized= true;
@@ -33,6 +39,17 @@ void input::process_key(keys key, bool pressed){
         context.i16[0] = key;
         event_fire(pressed ? EVENT_CODE_KEY_PRESSED : EVENT_CODE_KEY_RELEASED,0,context);
         
+    }
+}
+
+void input::process_button(buttons button, bool pressed){
+    if(state.mouse_current.buttons[button]!=pressed){
+        state.mouse_current.buttons[button] = pressed;
+
+        //Fire the event
+        event_context context;
+        context.u16[0] = button;
+        event_fire(pressed ? EVENT_CODE_BUTTON_PRESSED : EVENT_CODE_BUTTON_RELEASED,0,context);
     }
 }
 

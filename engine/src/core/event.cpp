@@ -14,7 +14,7 @@ bool event_system::initialize(){
     }
 
     is_initialized=false;
-    kzero_memory(&state, sizeof(state));
+    //kzero_memory(&state, sizeof(state));
 
     is_initialized=true;
     return true;
