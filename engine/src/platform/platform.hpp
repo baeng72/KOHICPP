@@ -3,6 +3,7 @@
 #include "defines.hpp"
 #include "containers/darray.hpp"
 
+struct vulkan_context;
 
 class KAPI platform{
     void* internal_state;
@@ -10,6 +11,7 @@ class KAPI platform{
     bool startup(ccharp application_name,i32 x, i32 y, i32 width, i32 height);
     void shutdown();
     void get_required_extensions_names(darray<ccharp>&names_array);
+    bool create_vulkan_surface(vulkan_context*context);
     bool pump_messages();
 };
 

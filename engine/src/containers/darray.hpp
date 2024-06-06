@@ -179,6 +179,15 @@ public:
     void set_length(u64 length){parray->length = length;}
     void clear(){parray->length = 0;}
 
-    
+    T& operator[](u64 index){
+        T* addr = static_cast<T*>(parray->memory);
+        addr += index;
+        return (*(addr));
+        }
+    const T& operator[](u64 index)const{
+        const T* addr = static_cast<T*>(parray->memory);
+        addr += index;
+        return *(addr);
+    }
     operator T* () {return static_cast<T*>((void*)parray->memory);}
 };

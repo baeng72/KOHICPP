@@ -36,7 +36,7 @@ void Log::log_output(log_level level, ccharp message, ...){
     bool is_error = level < LOG_LEVEL_WARN;
 
     strcpy_s(log_buffer,k_log_size,level_strings[level]);
-    int len = strlen(log_buffer);
+    int len = (int)strlen(log_buffer);
     va_list args;
     va_start( args, message );
 #if defined(_MSC_VER)

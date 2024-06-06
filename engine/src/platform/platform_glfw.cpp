@@ -14,8 +14,11 @@ static LARGE_INTEGER start_time;
 #endif
 
 #if defined(KPLATFORM_GLFW)
+#define GLFW_INCLUDE_VULKAN
 
 #include <glfw/glfw3.h>
+
+#include "renderer/vulkan/vulkan_types.inl"
 
 bool platform::startup(ccharp application_name, i32 x, i32 y, i32 width, i32 height){
     if(!glfwInit()){
@@ -105,6 +108,12 @@ void platform::get_required_extensions_names(darray<ccharp>&names_array){
     for(u32 i=0;i<count;i++){
         names_array.push(ext[i]);
     }
+}
+
+bool platform::create_vulkan_surface(vulkan_context*context){
+    GLFWwindow*pwindow = static_cast<GLFWwindow*>(internal_state);
+    VkResult res = glfwCreateWindowSurface(context->instance,   pwindow, nullptr, &context->surface);
+	return res==VK_SUCCESS;
 }
 
 void * platform_allocate(u64 size, bool aligned){

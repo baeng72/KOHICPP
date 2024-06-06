@@ -119,11 +119,26 @@ bool vulkan_renderer_backend::initialize(ccharp application_name,platform*platfo
     VK_CHECK(func(context.instance, &debug_create_info, context.allocator, &context.debug_messenger));
     KDEBUG("Vulkan debugger created.");
     #endif
+
+    //Surface
+    KDEBUG("Creating Vulkan surface...");
+    if(!platform_state->create_vulkan_surface(&context)){
+        KERROR("Failed to create platform surface!");
+        return false;
+    }
+    KDEBUG("Vulkan surface created.");
+
+    //Device creation
+    if(!context.device.create(context.instance,context.surface)){
+        KERROR("Failed to create device!");
+        return false;
+    }
     KINFO("Vulkan renderer initialized successfully.");
     return true;
 }
 
 void vulkan_renderer_backend::shutdown(){
+    context.device.destroy(context.instance);
     #if defined(_DEBUG)
     KDEBUG("Destroying Vulkan debugger...");
     if(context.debug_messenger){
