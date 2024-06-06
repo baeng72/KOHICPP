@@ -37,6 +37,8 @@ public:
         parray = create(capacity);
     }
 
+    
+
     ~darray(){
         destroy(parray);
         parray=nullptr;

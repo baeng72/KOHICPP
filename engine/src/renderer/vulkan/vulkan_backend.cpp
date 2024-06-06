@@ -129,7 +129,7 @@ bool vulkan_renderer_backend::initialize(ccharp application_name,platform*platfo
     KDEBUG("Vulkan surface created.");
 
     //Device creation
-    if(!context.device.create(context.instance,context.surface)){
+    if(!context.device.create(&context)){
         KERROR("Failed to create device!");
         return false;
     }
@@ -138,7 +138,7 @@ bool vulkan_renderer_backend::initialize(ccharp application_name,platform*platfo
 }
 
 void vulkan_renderer_backend::shutdown(){
-    context.device.destroy(context.instance);
+    context.device.destroy(&context);
     #if defined(_DEBUG)
     KDEBUG("Destroying Vulkan debugger...");
     if(context.debug_messenger){

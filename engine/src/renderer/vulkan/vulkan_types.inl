@@ -20,6 +20,7 @@ struct vulkan_swapchain_support_info{
 };
 struct vulkan_physical_device_queue_family_info;
 struct vulkan_physical_device_requirements;
+struct vulkan_context;
 struct vulkan_device{
     VkPhysicalDevice physical_device;
     VkDevice logical_device;
@@ -28,13 +29,17 @@ struct vulkan_device{
     i32 present_queue_index;
     i32 transfer_queue_index;
 
+    VkQueue graphics_queue{VK_NULL_HANDLE};
+    VkQueue present_queue{VK_NULL_HANDLE};
+    VkQueue transfer_queue{VK_NULL_HANDLE};
+
     VkPhysicalDeviceProperties properties;
     VkPhysicalDeviceFeatures features;
     VkPhysicalDeviceMemoryProperties memory;
     operator VkPhysicalDevice(){return physical_device;}
     operator VkDevice(){return logical_device;}
-    bool create(VkInstance instance, VkSurfaceKHR surface);
-    void destroy(VkInstance instance);
+    bool create(vulkan_context*context);
+    void destroy(vulkan_context*context);
     bool select_physical_device(VkInstance instance, VkSurfaceKHR surface);
     bool physical_device_meets_requirements(VkPhysicalDevice device,
         VkSurfaceKHR surface,
