@@ -97,3 +97,5 @@ STATIC_ASSERT(sizeof(bool) == 1, "Expected bool to be 1 byte.");
 #define KAPI
 #endif
 #endif
+
+#define KCLAMP(value, min, max) (value <= min) ? min : (value >= max) ? max : value;

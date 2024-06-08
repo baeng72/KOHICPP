@@ -147,6 +147,7 @@ void vulkan_renderer_backend::shutdown(){
         func(context.instance,context.debug_messenger,context.allocator);
     }
     #endif
+    vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
     KDEBUG("Destroying Vulkan Instance...");
     vkDestroyInstance(context.instance,context.allocator);
 }
@@ -174,12 +175,9 @@ void vulkan_renderer_backend::operator delete(void * ptr){
 #if defined(_DEBUG)
 
 
-void SetResourceName(VkDevice device, VkObjectType type, u64 handle, ccharp name){
-    VkDebugUtilsObjectNameInfoEXT ni{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
-    ni.objectType = type;
-    ni.objectHandle = handle;
-    ni.pObjectName = name;
-    context.pfnSetObjectName(device, &ni);
+void SetResourceName(vulkan_context*context,VkObjectType type, u64 handle, ccharp name){
+    context->device.SetResourceName(context,type,handle,name);
+    
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(

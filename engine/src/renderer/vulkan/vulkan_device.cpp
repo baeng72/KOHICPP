@@ -90,6 +90,10 @@ bool vulkan_device::create(vulkan_context*context){
     vkGetDeviceQueue(context->device.logical_device, context->device.present_queue_index, 0 ,&context->device.present_queue);
     vkGetDeviceQueue(context->device.logical_device, context->device.transfer_queue_index, 0, &context->device.transfer_queue);
 
+    pfnBeginLabel = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetDeviceProcAddr(context->device.logical_device,"vkCmdBeginDebugUtilsLabelEXT");
+    pfnEndLabel = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetDeviceProcAddr(context->device.logical_device,"vkCmdEndDebugUtilsLabelEXT");
+    pfnSetObjectName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetDeviceProcAddr(context->device.logical_device,"vkSetDebugUtilsObjectNameEXT");
+
     KINFO("Queues obtained.")
     return true;
 }
@@ -412,4 +416,39 @@ bool vulkan_device::physical_device_meets_requirements(VkPhysicalDevice device,
         return true;
     }
     return false;
+}
+
+bool vulkan_device::detect_depth_format(){
+    //Format candidates
+    const u64 candidate_count = 3;
+    VkFormat candidates[3] = {
+        VK_FORMAT_D32_SFLOAT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT
+    };
+
+    u32 flags = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    for(u64 i=0; i < candidate_count; ++i){
+        VkFormatProperties props;
+        vkGetPhysicalDeviceFormatProperties(physical_device, candidates[i], &props);
+
+        if((props.linearTilingFeatures & flags) == flags){
+            depth_format = candidates[i];
+            return true;
+        }else if((props.optimalTilingFeatures & flags) == flags){
+            depth_format = candidates[i];
+            return true;
+        }
+    }
+    return true;
+}
+
+void vulkan_device::SetResourceName(vulkan_context *context, VkObjectType type, u64 handle, ccharp name)
+{
+
+    VkDebugUtilsObjectNameInfoEXT info{VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT};
+    info.objectHandle = handle;
+    info.objectType = type;
+    info.pObjectName = name;
+    pfnSetObjectName(context->device.logical_device,&info);
 }

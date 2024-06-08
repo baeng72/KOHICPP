@@ -1,6 +1,7 @@
 #include "platform/platform.hpp"
 #include "core/logger.hpp"
 #include "core/input.hpp"
+#include "core/event.hpp"
 #include <cstdlib>
 #if defined(KPLATFORM_WINDOWS)
 #define WINDOWS_LEAN_AND_MEAN
@@ -42,7 +43,9 @@ bool platform::startup(ccharp application_name, i32 x, i32 y, i32 width, i32 hei
     });
 
     glfwSetWindowCloseCallback(pwindow,[](GLFWwindow*pwindow){
-        platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
+        //platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
+        event_context data{};
+        event_fire(EVENT_CODE_APPLICATION_QUIT,0,data);
     });
 
     glfwSetKeyCallback(pwindow,[](GLFWwindow*pwindow,i32 key, i32 scancode, i32 action, i32 mods){

@@ -36,6 +36,14 @@ struct vulkan_device{
     VkPhysicalDeviceProperties properties;
     VkPhysicalDeviceFeatures features;
     VkPhysicalDeviceMemoryProperties memory;
+
+    VkFormat depth_format{VK_FORMAT_UNDEFINED};
+#if defined(_DEBUG)
+    PFN_vkSetDebugUtilsObjectNameEXT pfnSetObjectName;
+    PFN_vkCmdBeginDebugUtilsLabelEXT pfnBeginLabel;
+    PFN_vkCmdEndDebugUtilsLabelEXT   pfnEndLabel;  
+#endif    
+
     operator VkPhysicalDevice(){return physical_device;}
     operator VkDevice(){return logical_device;}
     bool create(vulkan_context*context);
@@ -49,18 +57,61 @@ struct vulkan_device{
         vulkan_physical_device_queue_family_info * out_queue_info,
         vulkan_swapchain_support_info*out_swapchain_support);
     void query_swapchain_support(VkPhysicalDevice device, VkSurfaceKHR surface, vulkan_swapchain_support_info*out_support_info);
+#if defined(_DEBUG)
+    void SetResourceName(vulkan_context*context, VkObjectType type, u64 handle, ccharp name);
+#endif 
+    bool detect_depth_format();
+};
+
+struct vulkan_image{
+    VkImage handle{VK_NULL_HANDLE};
+    VkDeviceMemory memory{VK_NULL_HANDLE};
+    VkImageView view{VK_NULL_HANDLE};
+    u32 width{0};
+    u32 height{0};
+    void create(vulkan_context*context,VkImageType image_type, u32 width, u32 height, 
+        VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+        VkMemoryPropertyFlags memory_flags, 
+        bool create_view,
+        VkImageAspectFlags view_aspect_flags);
+    void create_image_view(vulkan_context*context, VkFormat format, VkImageAspectFlags aspect_flags);
+    void destroy(vulkan_context*context);
+};
+
+struct vulkan_swapchain{
+    VkSurfaceFormatKHR image_format{VK_FORMAT_UNDEFINED};
+    u32 max_frames_in_flight{0};
+    VkSwapchainKHR handle{VK_NULL_HANDLE};
+    u32 image_count{0};
+    VkImage * images{nullptr};
+    VkImageView * views{nullptr};
+
+    vulkan_image depth_attachment;
+    void create(vulkan_context*context, u32 width, u32 height);
+    void recreate(vulkan_context*context, u32 width, u32 height);
+    void destroy(vulkan_context*context);
+    bool acquire_next_image_index(vulkan_context*context, u64 timeout_ns, VkSemaphore image_available_semaphore, VkFence fence, u32*out_image_index);
+    void present(vulkan_context*context,VkQueue graphics_queue, VkQueue present_queue, VkSemaphore render_complete_semaphore, u32 present_image_index);
+    
 };
 
 struct vulkan_context{
+    // The framebuffer's current width, height.
+    u32 framebuffer_width{0};
+    u32 framebuffer_height{0};
     VkInstance instance{VK_NULL_HANDLE};
     VkAllocationCallbacks* allocator{nullptr};
     VkSurfaceKHR surface{VK_NULL_HANDLE};
     
 #if defined(_DEBUG)
     VkDebugUtilsMessengerEXT debug_messenger;    
-    PFN_vkSetDebugUtilsObjectNameEXT pfnSetObjectName;
-    PFN_vkCmdBeginDebugUtilsLabelEXT pfnBeginLabel;
-    PFN_vkCmdEndDebugUtilsLabelEXT   pfnEndLabel;    
+      
 #endif        
     vulkan_device device;
+
+    vulkan_swapchain swapchain;
+    u32 image_index{UINT32_MAX};
+    u32 current_frame{UINT32_MAX};
+    bool recreating_swapchain{false};
+    i32 (*find_memory_index)(u32 type_filter, u32 property_flags);
 };
