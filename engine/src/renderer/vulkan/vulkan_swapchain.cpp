@@ -130,6 +130,8 @@ void create_swapchain(vulkan_context* context, u32 width, u32 height, vulkan_swa
 
     VK_CHECK(vkCreateSwapchainKHR(context->device.logical_device, &swapchain_create_info, context->allocator, &swapchain->handle));
 
+    
+
     //Views
     for(u32 i = 0; i < swapchain->image_count; ++i){
         VkImageViewCreateInfo view_info{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};

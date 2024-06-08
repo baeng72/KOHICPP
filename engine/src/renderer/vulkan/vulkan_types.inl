@@ -78,7 +78,38 @@ struct vulkan_image{
     void destroy(vulkan_context*context);
 };
 
+
+enum vulkan_render_pass_state{
+    READY,
+    RECORDING,
+    IN_RENDER_PASS,
+    RECORDING_ENDED,
+    SUBMITTED,
+    NOT_ALLOCATED
+};
+
+struct vulkan_command_buffer;
+struct vulkan_renderpass{
+    VkRenderPass handle{VK_NULL_HANDLE};
+    f32 x{0.f};
+    f32 y{0.f};
+    f32 w{0.f};
+    f32 h{0.f};
+    f32 r{0.f};
+    f32 g{0.f};
+    f32 b{0.f};
+    f32 a{0.f};
+    f32 depth{0.f};
+    u32 stencil{0};
+    vulkan_render_pass_state state;
+    void create(vulkan_context* context, f32 x, f32 y, f32 w, f32 h, f32 r, f32 g, f32 b, f32 a, f32 depth, u32 stencil);
+    void destroy(vulkan_context* context);
+    void begin(vulkan_command_buffer* command_buffer, VkFramebuffer frame_buffer);
+    void end(vulkan_command_buffer* command_buffer);
+};
+
 struct vulkan_swapchain{
+    
     VkSurfaceFormatKHR image_format{VK_FORMAT_UNDEFINED};
     u32 max_frames_in_flight{0};
     VkSwapchainKHR handle{VK_NULL_HANDLE};
@@ -95,6 +126,22 @@ struct vulkan_swapchain{
     
 };
 
+enum vulkan_command_buffer_state{
+    COMMAND_BUFFER_STATE_READY,
+    COMMAND_BUFFER_STATE_RECORDING,
+    COMMAND_BUFFER_STATE_IN_RENDER_PASS,
+    COMMAND_BUFFER_STATE_RECORDING_ENDED,
+    COMMAND_BUFFER_STATE_SUBMITTED,
+    COMMAND_BUFFER_STATE_NO_ALLOCATED
+};
+
+struct vulkan_command_buffer{
+    VkCommandBuffer handle{VK_NULL_HANDLE};
+    //Command buffer state
+    vulkan_command_buffer_state state;
+};
+
+
 struct vulkan_context{
     // The framebuffer's current width, height.
     u32 framebuffer_width{0};
@@ -110,6 +157,8 @@ struct vulkan_context{
     vulkan_device device;
 
     vulkan_swapchain swapchain;
+    vulkan_renderpass main_renderpass;
+
     u32 image_index{UINT32_MAX};
     u32 current_frame{UINT32_MAX};
     bool recreating_swapchain{false};

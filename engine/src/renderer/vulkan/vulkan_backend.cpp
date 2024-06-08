@@ -13,6 +13,8 @@
 
 static vulkan_context context;//TODO: class member of vulkan_renderer_backend?
 
+i32 find_memory_index(u32 type_filter, u32 property_flags);
+
 VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
     VkDebugUtilsMessageTypeFlagsEXT message_types,
@@ -35,6 +37,8 @@ bool vulkan_renderer_backend::initialize(ccharp application_name,platform*platfo
     context.allocator = nullptr;
 
     this->platform_state=platform_state;
+
+    context.find_memory_index = find_memory_index;
 
     //Setup vulkan instance
     VkApplicationInfo app_info{VK_STRUCTURE_TYPE_APPLICATION_INFO};
@@ -133,11 +137,25 @@ bool vulkan_renderer_backend::initialize(ccharp application_name,platform*platfo
         KERROR("Failed to create device!");
         return false;
     }
+
+    //Swapchain
+    context.swapchain.create(&context,context.framebuffer_width,context.framebuffer_height);
+
+    //renderpass
+    context.main_renderpass.create(&context,0.f,0.f,(f32)context.framebuffer_width,(f32)context.framebuffer_height,0.f,0.f,0.2f,1.f,1.f,0);
+
     KINFO("Vulkan renderer initialized successfully.");
     return true;
 }
 
 void vulkan_renderer_backend::shutdown(){
+
+    //Renderpass
+    context.main_renderpass.destroy(&context);
+
+    //Swapchain
+    context.swapchain.destroy(&context);
+
     context.device.destroy(&context);
     #if defined(_DEBUG)
     KDEBUG("Destroying Vulkan debugger...");
@@ -201,6 +219,20 @@ VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
             break;
     }
     return VK_FALSE;
+}
+
+i32 find_memory_index(u32 type_filter, u32 property_flags){
+    VkPhysicalDeviceMemoryProperties memory_properties;
+    vkGetPhysicalDeviceMemoryProperties(context.device.physical_device, &memory_properties);
+
+    for(u32 i=0; i < memory_properties.memoryTypeCount; ++ i){
+        if(type_filter & (1 << i) && (memory_properties.memoryTypes[i].propertyFlags & property_flags) == property_flags){
+            return i;
+        }
+    }
+
+    KWARN("Unable to find suitable memory type!");
+    return -1;
 }
 
 #endif

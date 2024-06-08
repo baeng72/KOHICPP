@@ -20,6 +20,7 @@ void vulkan_image::create(vulkan_context*context, VkImageType image_type, u32 w,
     image_create_info.extent.height = h;
     image_create_info.extent.depth = 1;
     image_create_info.mipLevels = 4;
+    image_create_info.arrayLayers = 1;
     image_create_info.format = format;
     image_create_info.tiling = tiling;
     image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -28,7 +29,7 @@ void vulkan_image::create(vulkan_context*context, VkImageType image_type, u32 w,
     image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
     VK_CHECK(vkCreateImage(context->device.logical_device, &image_create_info, context->allocator,&handle));
-    
+
     //Query memory requirements
     VkMemoryRequirements memory_requirements;
     vkGetImageMemoryRequirements(context->device.logical_device, handle, &memory_requirements);
