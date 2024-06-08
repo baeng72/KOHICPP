@@ -40,8 +40,10 @@ public:
     
 
     ~darray(){
+        if(parray){
         destroy(parray);
         parray=nullptr;
+        }
         
     }
 
@@ -173,6 +175,11 @@ public:
         }
 
         parray->length--;
+    }
+
+    void reserve(u64 capacity){
+        destroy(parray);
+        parray = create(capacity);
     }
 
     u64 capacity()const{return parray->capacity;}

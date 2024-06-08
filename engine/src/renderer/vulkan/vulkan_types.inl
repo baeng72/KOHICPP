@@ -2,6 +2,7 @@
 
 #include "defines.hpp"
 #include "core/asserts.hpp"
+#include "containers/darray.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -33,6 +34,8 @@ struct vulkan_device{
     VkQueue present_queue{VK_NULL_HANDLE};
     VkQueue transfer_queue{VK_NULL_HANDLE};
 
+    VkCommandPool graphics_command_pool{VK_NULL_HANDLE};
+
     VkPhysicalDeviceProperties properties;
     VkPhysicalDeviceFeatures features;
     VkPhysicalDeviceMemoryProperties memory;
@@ -58,7 +61,7 @@ struct vulkan_device{
         vulkan_swapchain_support_info*out_swapchain_support);
     void query_swapchain_support(VkPhysicalDevice device, VkSurfaceKHR surface, vulkan_swapchain_support_info*out_support_info);
 #if defined(_DEBUG)
-    void SetResourceName(vulkan_context*context, VkObjectType type, u64 handle, ccharp name);
+    void SetResourceName(VkObjectType type, u64 handle, ccharp name);
 #endif 
     bool detect_depth_format();
 };
@@ -132,13 +135,23 @@ enum vulkan_command_buffer_state{
     COMMAND_BUFFER_STATE_IN_RENDER_PASS,
     COMMAND_BUFFER_STATE_RECORDING_ENDED,
     COMMAND_BUFFER_STATE_SUBMITTED,
-    COMMAND_BUFFER_STATE_NO_ALLOCATED
+    COMMAND_BUFFER_STATE_NOT_ALLOCATED
 };
 
 struct vulkan_command_buffer{
     VkCommandBuffer handle{VK_NULL_HANDLE};
     //Command buffer state
     vulkan_command_buffer_state state;
+
+    void allocate(vulkan_context*context, VkCommandPool pool, bool is_primary);
+    void free(vulkan_context* context, VkCommandPool pool);
+    void begin(bool is_single_use, bool is_renderpass_continue, bool is_simultaneous_use);
+    void end();
+    void update_submitted();
+    void reset();
+    void allocate_and_begin_single_use(vulkan_context*context, VkCommandPool pool);
+    void end_single_use(vulkan_context*context,VkCommandPool pool,VkQueue queue);
+
 };
 
 
@@ -158,6 +171,8 @@ struct vulkan_context{
 
     vulkan_swapchain swapchain;
     vulkan_renderpass main_renderpass;
+
+    darray<vulkan_command_buffer> graphics_command_buffers;
 
     u32 image_index{UINT32_MAX};
     u32 current_frame{UINT32_MAX};

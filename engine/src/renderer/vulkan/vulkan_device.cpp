@@ -78,23 +78,31 @@ bool vulkan_device::create(vulkan_context*context){
     device_create_info.ppEnabledLayerNames = nullptr;
 
     VK_CHECK(vkCreateDevice(
-        context->device.physical_device,
+        physical_device,
         &device_create_info,
         context->allocator,
-        &context->device.logical_device));
+        &logical_device));
 
     KINFO("Logical device created.");
 
     //Get queues
-    vkGetDeviceQueue(context->device.logical_device, context->device.graphics_queue_index,0,&context->device.graphics_queue);
-    vkGetDeviceQueue(context->device.logical_device, context->device.present_queue_index, 0 ,&context->device.present_queue);
-    vkGetDeviceQueue(context->device.logical_device, context->device.transfer_queue_index, 0, &context->device.transfer_queue);
+    vkGetDeviceQueue(logical_device, context->device.graphics_queue_index,0,&context->device.graphics_queue);
+    vkGetDeviceQueue(logical_device, context->device.present_queue_index, 0 ,&context->device.present_queue);
+    vkGetDeviceQueue(logical_device, context->device.transfer_queue_index, 0, &context->device.transfer_queue);
 
-    pfnBeginLabel = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetDeviceProcAddr(context->device.logical_device,"vkCmdBeginDebugUtilsLabelEXT");
-    pfnEndLabel = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetDeviceProcAddr(context->device.logical_device,"vkCmdEndDebugUtilsLabelEXT");
-    pfnSetObjectName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetDeviceProcAddr(context->device.logical_device,"vkSetDebugUtilsObjectNameEXT");
+    pfnBeginLabel = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetDeviceProcAddr(logical_device,"vkCmdBeginDebugUtilsLabelEXT");
+    pfnEndLabel = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetDeviceProcAddr(logical_device,"vkCmdEndDebugUtilsLabelEXT");
+    pfnSetObjectName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetDeviceProcAddr(logical_device,"vkSetDebugUtilsObjectNameEXT");
 
-    KINFO("Queues obtained.")
+    KINFO("Queues obtained.");
+
+    //Create command pool for graphics queue.
+    VkCommandPoolCreateInfo pool_create_info{VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+    pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    VK_CHECK(vkCreateCommandPool(
+        logical_device, &pool_create_info, context->allocator,&graphics_command_pool));
+    KINFO("Graphics command pool created.");
+
     return true;
 }
 
@@ -104,16 +112,23 @@ void vulkan_device::destroy(vulkan_context*context){
     context->device.present_queue = VK_NULL_HANDLE;
     context->device.graphics_queue = VK_NULL_HANDLE;
 
+    KINFO("Destroy command pools...");
+    vkDestroyCommandPool(
+        logical_device,
+        graphics_command_pool,
+        context->allocator);
+    
+
     //Destroy logical device
     KINFO("Destroying logical device...");
-    if(context->device.logical_device){
-        vkDestroyDevice(context->device.logical_device, context->allocator);
-        context->device.logical_device = VK_NULL_HANDLE;
+    if(logical_device){
+        vkDestroyDevice(logical_device, context->allocator);
+        logical_device = VK_NULL_HANDLE;
     }
 
     //Physical devices are not destroyed
     KINFO("Releasing physical device resources...");
-    context->device.physical_device = VK_NULL_HANDLE;
+    physical_device = VK_NULL_HANDLE;
 
     if(context->device.swapchain_support.formats){
         kfree(context->device.swapchain_support.formats,
@@ -443,12 +458,12 @@ bool vulkan_device::detect_depth_format(){
     return true;
 }
 
-void vulkan_device::SetResourceName(vulkan_context *context, VkObjectType type, u64 handle, ccharp name)
+void vulkan_device::SetResourceName(VkObjectType type, u64 handle, ccharp name)
 {
 
     VkDebugUtilsObjectNameInfoEXT info{VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT};
     info.objectHandle = handle;
     info.objectType = type;
     info.pObjectName = name;
-    pfnSetObjectName(context->device.logical_device,&info);
+    pfnSetObjectName(logical_device,&info);
 }

@@ -20,6 +20,7 @@ public:
     virtual bool begin_frame(f32 delta_time)=0;
     virtual bool end_frame(f32 delta_time)=0;
     virtual void resized(u16 width, u16 height)=0;
+    
 };
 
 struct renderer_packet{

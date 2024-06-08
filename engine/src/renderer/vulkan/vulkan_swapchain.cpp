@@ -120,17 +120,36 @@ void create_swapchain(vulkan_context* context, u32 width, u32 height, vulkan_swa
         swapchain_create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         swapchain_create_info.queueFamilyIndexCount = 2;
         swapchain_create_info.pQueueFamilyIndices = queueFamilyIndices;
+
+    }else{
+        swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        swapchain_create_info.queueFamilyIndexCount = 0;
+        swapchain_create_info.pQueueFamilyIndices = 0;
     }
 
     swapchain_create_info.preTransform = context->device.swapchain_support.capabilities.currentTransform;
     swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     swapchain_create_info.presentMode = present_mode;
     swapchain_create_info.clipped = VK_TRUE;
-    swapchain_create_info.oldSwapchain = nullptr;
+    swapchain_create_info.oldSwapchain = VK_NULL_HANDLE;
 
-    VK_CHECK(vkCreateSwapchainKHR(context->device.logical_device, &swapchain_create_info, context->allocator, &swapchain->handle));
+    VK_CHECK(vkCreateSwapchainKHR(context->device.logical_device, &swapchain_create_info,context->allocator,&swapchain->handle));
 
-    
+    context->current_frame=0;
+
+    //Images
+    swapchain->image_count = 0;
+    VK_CHECK(vkGetSwapchainImagesKHR(context->device.logical_device, swapchain->handle, &swapchain->image_count,nullptr));
+    if(!swapchain->images){
+        swapchain->images = (VkImage*)kallocate(sizeof(VkImage)*swapchain->image_count,MEMORY_TAG_RENDERER);
+    }
+
+    if(!swapchain->views){
+        swapchain->views = (VkImageView*)kallocate(sizeof(VkImageView) * swapchain->image_count, MEMORY_TAG_RENDERER);
+    }
+
+    VK_CHECK(vkGetSwapchainImagesKHR(context->device.logical_device, swapchain->handle, &swapchain->image_count, swapchain->images));
+
 
     //Views
     for(u32 i = 0; i < swapchain->image_count; ++i){
