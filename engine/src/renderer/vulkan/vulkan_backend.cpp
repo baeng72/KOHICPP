@@ -7,12 +7,15 @@
 #include "core/kmemory.hpp"
 #include "core/kstring.hpp"
 #include "core/kmemory.hpp"
+#include "core/application.hpp"
 
 #include "containers/darray.hpp"
 
 #include "platform/platform.hpp"
 
 static vulkan_context context;//TODO: class member of vulkan_renderer_backend?
+static u32 cached_framebuffer_width = 0;
+static u32 cached_framebuffer_height = 0;
 
 i32 find_memory_index(u32 type_filter, u32 property_flags);
 
@@ -37,6 +40,11 @@ vulkan_renderer_backend::~vulkan_renderer_backend(){
 
 bool vulkan_renderer_backend::initialize(ccharp application_name,platform*platform_state){
     context.allocator = nullptr;
+
+    application::get_framebuffer_size(&cached_framebuffer_width, &cached_framebuffer_height);
+    context.framebuffer_width = (cached_framebuffer_width != 0) ? cached_framebuffer_width : 800;
+    context.framebuffer_height = (cached_framebuffer_height != 0) ? cached_framebuffer_height : 600;
+    cached_framebuffer_width = cached_framebuffer_height = 0;
 
     this->platform_state=platform_state;
 
@@ -146,8 +154,33 @@ bool vulkan_renderer_backend::initialize(ccharp application_name,platform*platfo
     //renderpass
     context.main_renderpass.create(&context,0.f,0.f,(f32)context.framebuffer_width,(f32)context.framebuffer_height,0.f,0.f,0.2f,1.f,1.f,0);
 
+    //swapchain framebuffers
+    context.swapchain.framebuffers.reserve(context.swapchain.image_count);
+    regenerate_framebuffers(&context.swapchain,&context.main_renderpass);
+
     //create command buffers
     create_command_buffers();
+
+    //create sync objects.
+    context.image_available_semaphores.reserve(context.swapchain.max_frames_in_flight);
+    context.queue_complete_semaphores.reserve(context.swapchain.max_frames_in_flight);
+    context.in_flight_fences.reserve(context.swapchain.max_frames_in_flight);
+
+    for(u32 i=0; i < context.swapchain.max_frames_in_flight;++i){
+        VkSemaphoreCreateInfo semaphore_ci{VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+        vkCreateSemaphore(context.device.logical_device, &semaphore_ci, context.allocator, &context.image_available_semaphores[i]);
+        vkCreateSemaphore(context.device.logical_device, &semaphore_ci, context.allocator, &context.queue_complete_semaphores[i]);
+
+        context.in_flight_fences[i].create(&context,true);
+    }
+
+    //In flight fences should not yet exist at this point, so clear list.
+    //These are stored in ponters because the initial state should be 0, and will be 0 when not in use.
+    context.images_in_flight.reserve(context.swapchain.image_count);
+    for(u32 i=0;i < context.swapchain.image_count; ++i){
+        context.images_in_flight[i] = nullptr;
+    }
+
 
     KINFO("Vulkan renderer initialized successfully.");
     return true;
@@ -155,6 +188,26 @@ bool vulkan_renderer_backend::initialize(ccharp application_name,platform*platfo
 
 void vulkan_renderer_backend::shutdown(){
 
+    vkDeviceWaitIdle(context.device.logical_device);
+
+    //sync objects
+    for(u32 i=0; i < context.swapchain.max_frames_in_flight; ++i){
+        if(context.image_available_semaphores[i]){
+            vkDestroySemaphore(context.device.logical_device,context.image_available_semaphores[i],context.allocator);
+            context.image_available_semaphores[i] = VK_NULL_HANDLE;
+            
+        }
+        if(context.queue_complete_semaphores[i]){
+            vkDestroySemaphore(context.device.logical_device,context.queue_complete_semaphores[i],context.allocator);
+            context.queue_complete_semaphores[i] = VK_NULL_HANDLE;
+        }
+
+        context.in_flight_fences[i].destroy(&context);
+    }
+    context.image_available_semaphores.clear();
+    context.queue_complete_semaphores.clear();
+    context.in_flight_fences.clear();
+    context.images_in_flight.clear();
     //Command buffers
     for(u32 i=0; i < context.swapchain.image_count; ++i){
         if(context.graphics_command_buffers[i].handle){
@@ -163,6 +216,11 @@ void vulkan_renderer_backend::shutdown(){
         }
     }
     context.graphics_command_buffers.clear();
+
+    //destroy framebuffers
+    for(u32 i=0; i < context.swapchain.image_count; ++i){
+        context.swapchain.framebuffers[i].destroy(&context);
+    }
 
     //Renderpass
     context.main_renderpass.destroy(&context);
@@ -203,6 +261,38 @@ void* vulkan_renderer_backend::operator new(size_t size){
 
 void vulkan_renderer_backend::operator delete(void * ptr){
     kfree(ptr, sizeof(vulkan_renderer_backend),MEMORY_TAG_RENDERER);
+}
+
+void vulkan_renderer_backend::create_command_buffers(){
+    if(!context.graphics_command_buffers.length()){
+        context.graphics_command_buffers.reserve(context.swapchain.image_count);
+        for(u32 i=0; i < context.swapchain.image_count; ++i){
+            kzero_memory(&context.graphics_command_buffers[i],sizeof(vulkan_command_buffer));
+        }
+    }
+
+    for(u32 i=0; i < context.swapchain.image_count; ++i){
+        if(context.graphics_command_buffers[i].handle){
+            context.graphics_command_buffers[i].free(&context,context.device.graphics_command_pool);
+        }
+        kzero_memory(&context.graphics_command_buffers[i],sizeof(vulkan_command_buffer));
+        context.graphics_command_buffers[i].allocate(&context,context.device.graphics_command_pool,true);
+    }
+    KDEBUG("Vulkan command buffers created.");
+}
+
+void vulkan_renderer_backend::regenerate_framebuffers(vulkan_swapchain*swapchain, vulkan_renderpass*renderpass){
+    for(u32 i=0; i < swapchain->image_count; ++i){
+        u32 attachment_count=2;
+        VkImageView attachments[] =  {
+            swapchain->views[i],
+            swapchain->depth_attachment.view
+        };
+
+        context.swapchain.framebuffers[i].create(&context,renderpass,
+            context.framebuffer_width,context.framebuffer_height,
+            attachment_count, attachments);
+    }
 }
 #if defined(_DEBUG)
 
@@ -249,22 +339,6 @@ i32 find_memory_index(u32 type_filter, u32 property_flags){
     return -1;
 }
 
-void vulkan_renderer_backend::create_command_buffers(){
-    if(!context.graphics_command_buffers.length()){
-        context.graphics_command_buffers.reserve(context.swapchain.image_count);
-        for(u32 i=0; i < context.swapchain.image_count; ++i){
-            kzero_memory(&context.graphics_command_buffers[i],sizeof(vulkan_command_buffer));
-        }
-    }
 
-    for(u32 i=0; i < context.swapchain.image_count; ++i){
-        if(context.graphics_command_buffers[i].handle){
-            context.graphics_command_buffers[i].free(&context,context.device.graphics_command_pool);
-        }
-        kzero_memory(&context.graphics_command_buffers[i],sizeof(vulkan_command_buffer));
-        context.graphics_command_buffers[i].allocate(&context,context.device.graphics_command_pool,true);
-    }
-    KDEBUG("Vulkan command buffers created.");
-}
 
 #endif

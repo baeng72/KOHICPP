@@ -148,7 +148,10 @@ bool application::run(){
     return true;
 }
 
-
+void application::get_framebuffer_size(u32 *width, u32*height){
+    *width = app_state.width;
+    *height = app_state.height;
+}
 
 bool application::on_event(u16 code, void* sender, void*listener_inst, event_context&context){
     switch(code){

@@ -48,6 +48,16 @@ void vulkan_swapchain::present(vulkan_context* context, VkQueue graphics_queue, 
     present_info.pSwapchains = &handle;
     present_info.pImageIndices = &present_image_index;
     present_info.pResults = 0;
+
+    VkResult result = vkQueuePresentKHR(present_queue, &present_info);
+    if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR){
+        recreate(context, context->framebuffer_width, context->framebuffer_height);
+    }else if(result != VK_SUCCESS){
+        KFATAL("Failed to present swap chain image!");
+    }
+
+    //Increment (and loop) index
+    context->current_frame = (context->current_frame +1) % max_frames_in_flight;
 }
 
 void create_swapchain(vulkan_context* context, u32 width, u32 height, vulkan_swapchain * swapchain){

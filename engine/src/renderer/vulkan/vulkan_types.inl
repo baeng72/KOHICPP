@@ -111,6 +111,15 @@ struct vulkan_renderpass{
     void end(vulkan_command_buffer* command_buffer);
 };
 
+struct vulkan_framebuffer{
+    VkFramebuffer handle{VK_NULL_HANDLE};
+    u32 attachment_count{0};
+    VkImageView* attachments{nullptr};
+    vulkan_renderpass*renderpass;
+    void create(vulkan_context*context, vulkan_renderpass*renderpass, u32 width, u32 height, u32 attachment_count,VkImageView *attachments);
+    void destroy(vulkan_context*context);
+};
+
 struct vulkan_swapchain{
     
     VkSurfaceFormatKHR image_format{VK_FORMAT_UNDEFINED};
@@ -121,6 +130,8 @@ struct vulkan_swapchain{
     VkImageView * views{nullptr};
 
     vulkan_image depth_attachment;
+
+    darray<vulkan_framebuffer>  framebuffers;
     void create(vulkan_context*context, u32 width, u32 height);
     void recreate(vulkan_context*context, u32 width, u32 height);
     void destroy(vulkan_context*context);
@@ -151,7 +162,15 @@ struct vulkan_command_buffer{
     void reset();
     void allocate_and_begin_single_use(vulkan_context*context, VkCommandPool pool);
     void end_single_use(vulkan_context*context,VkCommandPool pool,VkQueue queue);
+};
 
+struct vulkan_fence{
+    VkFence handle{VK_NULL_HANDLE};
+    bool is_signaled{false};
+    void create(vulkan_context* context,bool create_signaled);
+    void destroy(vulkan_context*context);
+    bool wait(vulkan_context* context, u64 timeout_ms);
+    void reset(vulkan_context*context);
 };
 
 
@@ -173,6 +192,15 @@ struct vulkan_context{
     vulkan_renderpass main_renderpass;
 
     darray<vulkan_command_buffer> graphics_command_buffers;
+
+    darray<VkSemaphore> image_available_semaphores;
+    darray<VkSemaphore> queue_complete_semaphores;
+
+    u32 in_flight_fence_count;
+    darray<vulkan_fence> in_flight_fences;
+
+    //Holds poinoters to fences which exist and are owned elsewhere.
+    darray<vulkan_fence*> images_in_flight;
 
     u32 image_index{UINT32_MAX};
     u32 current_frame{UINT32_MAX};

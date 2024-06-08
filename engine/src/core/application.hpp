@@ -22,5 +22,6 @@ class KAPI application{
     public:
     bool create(game*game_inst);
     bool run();
+    static void get_framebuffer_size(u32*width, u32*height);
 };
 
