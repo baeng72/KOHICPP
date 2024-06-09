@@ -202,12 +202,13 @@ void create_swapchain(vulkan_context* context, u32 width, u32 height, vulkan_swa
 }
 
 void destroy_swapchain(vulkan_context * context, vulkan_swapchain * swapchain){
+    context->device.wait_idle();
     swapchain->depth_attachment.destroy(context);
 
     //Only destroy the views, not the images, since those are owned by the swapchain and are thus
     //destroy when it is.
     for(u32 i=0; i < swapchain->image_count; ++i){
-        vkDestroyImageView(context->device.logical_device, swapchain->views[i], context->allocator);
+        vkDestroyImageView(context->device, swapchain->views[i], context->allocator);
     }
 
     vkDestroySwapchainKHR(context->device.logical_device, swapchain->handle, context->allocator);

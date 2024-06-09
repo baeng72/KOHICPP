@@ -17,6 +17,7 @@ class vulkan_renderer_backend : public renderer_backend{
     virtual void resized(u16 width, u16 height)override;
     void create_command_buffers();
     void regenerate_framebuffers(vulkan_swapchain*swapchain, vulkan_renderpass * renderpass);
+    bool recreate_swapchain();
     void * operator new(size_t);
     void operator delete(void*);
 };

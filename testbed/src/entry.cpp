@@ -9,7 +9,7 @@ game*create_game(){
     app_config.start_pos_x = 100;
     app_config.start_pos_y = 100;
     app_config.start_width = 1280;
-    app_config.start_height = 800;
+    app_config.start_height = 720;
     app_config.name = "Kohi Engine Testbed";
     
     return new testgame(app_config);

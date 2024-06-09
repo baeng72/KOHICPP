@@ -2,7 +2,18 @@
 
 #include "core/kmemory.hpp"
 
-void vulkan_renderpass::create(vulkan_context* context, f32 x, f32 y, f32 w, f32 h, f32 r, f32 g, f32 b, f32 a, f32 depth, u32 stencil){
+void vulkan_renderpass::create(vulkan_context* context, f32 x_, f32 y_, f32 w_, f32 h_, f32 r_, f32 g_, f32 b_, f32 a_, f32 depth_, u32 stencil_){
+
+    x=x_;
+    y=y_;
+    w=w_;
+    h=h_;
+    r=r_;
+    g=g_;
+    b=b_;
+    a=a_;
+    depth=depth_;
+    stencil=stencil_;
 
     //Main subpass
     VkSubpassDescription subpass{};

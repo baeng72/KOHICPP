@@ -467,3 +467,7 @@ void vulkan_device::SetResourceName(VkObjectType type, u64 handle, ccharp name)
     info.pObjectName = name;
     pfnSetObjectName(logical_device,&info);
 }
+
+VkResult vulkan_device::wait_idle(){
+    return vkDeviceWaitIdle(logical_device);
+}

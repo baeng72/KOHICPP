@@ -40,6 +40,10 @@ bool platform::startup(ccharp application_name, i32 x, i32 y, i32 width, i32 hei
 
     glfwSetWindowSizeCallback(pwindow,[](GLFWwindow*pwindow, i32 width, i32 height){
         platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
+        event_context context;
+        context.u16[0] = (u16)width;
+        context.u16[1] = (u16)height;
+        event_fire(EVENT_CODE_RESIZED,0,context);
     });
 
     glfwSetWindowCloseCallback(pwindow,[](GLFWwindow*pwindow){

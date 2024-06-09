@@ -64,6 +64,9 @@ struct vulkan_device{
     void SetResourceName(VkObjectType type, u64 handle, ccharp name);
 #endif 
     bool detect_depth_format();
+    VkResult wait_idle();
+    operator VkPhysicalDevice()const{return physical_device;}
+    operator VkDevice()const{return logical_device;}
 };
 
 struct vulkan_image{
@@ -79,6 +82,8 @@ struct vulkan_image{
         VkImageAspectFlags view_aspect_flags);
     void create_image_view(vulkan_context*context, VkFormat format, VkImageAspectFlags aspect_flags);
     void destroy(vulkan_context*context);
+    operator VkImage()const{return handle;}
+    operator VkImageView()const{return view;}
 };
 
 
@@ -109,6 +114,7 @@ struct vulkan_renderpass{
     void destroy(vulkan_context* context);
     void begin(vulkan_command_buffer* command_buffer, VkFramebuffer frame_buffer);
     void end(vulkan_command_buffer* command_buffer);
+    operator VkRenderPass()const{return handle;}
 };
 
 struct vulkan_framebuffer{
@@ -118,6 +124,7 @@ struct vulkan_framebuffer{
     vulkan_renderpass*renderpass;
     void create(vulkan_context*context, vulkan_renderpass*renderpass, u32 width, u32 height, u32 attachment_count,VkImageView *attachments);
     void destroy(vulkan_context*context);
+    operator VkFramebuffer()const{return handle;}
 };
 
 struct vulkan_swapchain{
@@ -137,6 +144,7 @@ struct vulkan_swapchain{
     void destroy(vulkan_context*context);
     bool acquire_next_image_index(vulkan_context*context, u64 timeout_ns, VkSemaphore image_available_semaphore, VkFence fence, u32*out_image_index);
     void present(vulkan_context*context,VkQueue graphics_queue, VkQueue present_queue, VkSemaphore render_complete_semaphore, u32 present_image_index);
+    operator VkSwapchainKHR()const{return handle;}
     
 };
 
@@ -162,6 +170,7 @@ struct vulkan_command_buffer{
     void reset();
     void allocate_and_begin_single_use(vulkan_context*context, VkCommandPool pool);
     void end_single_use(vulkan_context*context,VkCommandPool pool,VkQueue queue);
+    operator VkCommandBuffer()const{return handle;}
 };
 
 struct vulkan_fence{
@@ -171,6 +180,7 @@ struct vulkan_fence{
     void destroy(vulkan_context*context);
     bool wait(vulkan_context* context, u64 timeout_ms);
     void reset(vulkan_context*context);
+    operator VkFence()const{return handle;}
 };
 
 
@@ -178,6 +188,12 @@ struct vulkan_context{
     // The framebuffer's current width, height.
     u32 framebuffer_width{0};
     u32 framebuffer_height{0};
+
+    //current generation of framebuffer size. If it does not match frambuffer_size_last_generation
+    //a new one should be generated.
+    u64 framebuffer_size_generation{0};
+    //generation of framebuffer when last created
+    u64 framebuffer_size_last_generation{0};
     VkInstance instance{VK_NULL_HANDLE};
     VkAllocationCallbacks* allocator{nullptr};
     VkSurfaceKHR surface{VK_NULL_HANDLE};
@@ -206,4 +222,10 @@ struct vulkan_context{
     u32 current_frame{UINT32_MAX};
     bool recreating_swapchain{false};
     i32 (*find_memory_index)(u32 type_filter, u32 property_flags);
+
+    //helpers
+    operator VkDevice ()const{return device.logical_device;}
+    operator VkPhysicalDevice() const{return device.physical_device;}
+    operator VkInstance()const{return instance;}
+    operator VkSurfaceKHR()const{return surface;}
 };
