@@ -20,6 +20,7 @@ add_subdirectory(vendor)
 add_subdirectory(core)
 add_subdirectory(platform)
 add_subdirectory(renderer)
+add_subdirectory(math)
 add_definitions(-DKEXPORT)
 
 add_library(KOHICPP SHARED ${SRC_FILES} ${CORE_FILES} ${PLATFORM_FILES} ${CONTAINER_FILES} ${RENDERER_FILES} ${MATH_FILES})

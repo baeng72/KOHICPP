@@ -1,6 +1,6 @@
 #pragma once
 
-#include "defines.h"
+#include "defines.hpp"
 
 typedef union vec2_u {
     // An array of x, y
@@ -68,3 +68,7 @@ typedef union vec4_u {
 } vec4;
 
 typedef vec4 quat;
+
+union mat4{
+    f32 data[16];
+};
