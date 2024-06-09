@@ -114,7 +114,7 @@ bool application::run(){
             }
 
             renderer_packet packet;
-            packet.delta_time = delta;
+            packet.delta_time = (f32)delta;
             app_state.renderer.draw_frame(&packet);
 
             //Figure out how long the frame took and, if below

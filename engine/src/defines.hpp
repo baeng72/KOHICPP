@@ -99,3 +99,11 @@ STATIC_ASSERT(sizeof(bool) == 1, "Expected bool to be 1 byte.");
 #endif
 
 #define KCLAMP(value, min, max) (value <= min) ? min : (value >= max) ? max : value;
+
+#ifdef _MSC_VER
+#define KINLINE __forceinline
+#define KNOINLINE __declspec(noinline)
+#else
+#define KINLINE static inline
+#define KNOINLINE 
+#endif

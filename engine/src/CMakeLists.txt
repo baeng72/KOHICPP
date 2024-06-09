@@ -22,7 +22,7 @@ add_subdirectory(platform)
 add_subdirectory(renderer)
 add_definitions(-DKEXPORT)
 
-add_library(KOHICPP SHARED ${SRC_FILES} ${CORE_FILES} ${PLATFORM_FILES} ${CONTAINER_FILES} ${RENDERER_FILES})
+add_library(KOHICPP SHARED ${SRC_FILES} ${CORE_FILES} ${PLATFORM_FILES} ${CONTAINER_FILES} ${RENDERER_FILES} ${MATH_FILES})
 
 target_link_libraries(KOHICPP glfw)
 
