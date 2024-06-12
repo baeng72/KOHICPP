@@ -21,87 +21,96 @@ static LARGE_INTEGER start_time;
 
 #include "renderer/vulkan/vulkan_types.inl"
 
-bool platform::startup(ccharp application_name, i32 x, i32 y, i32 width, i32 height){
-    if(!glfwInit()){
-        KFATAL("Unable to initialized GLFW!");
-        return false;
-    }
+platform_system*platform_system::state_ptr{nullptr};
 
-    if(!glfwVulkanSupported()){
-        KFATAL("GLFW doesn't support Vulkan!");
-        return false;
-    }
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow * pwindow = glfwCreateWindow(width,height,application_name,nullptr,nullptr);
-    glfwSetWindowPos(pwindow,x,y);//position window
-
-    glfwSetWindowUserPointer(pwindow,this);
-
-    glfwSetWindowSizeCallback(pwindow,[](GLFWwindow*pwindow, i32 width, i32 height){
-        platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
-        event_context context;
-        context.u16[0] = (u16)width;
-        context.u16[1] = (u16)height;
-        event_fire(EVENT_CODE_RESIZED,0,context);
-    });
-
-    glfwSetWindowCloseCallback(pwindow,[](GLFWwindow*pwindow){
-        //platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
-        event_context data{};
-        event_fire(EVENT_CODE_APPLICATION_QUIT,0,data);
-    });
-
-    glfwSetKeyCallback(pwindow,[](GLFWwindow*pwindow,i32 key, i32 scancode, i32 action, i32 mods){
-        //platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
-        
-        keys key_val = (keys)key;
-        bool pressed = action == GLFW_PRESS;
-        input_process_key(key_val, pressed);
-
-    });
-    glfwSetMouseButtonCallback(pwindow,[](GLFWwindow*pwindow,i32 button, i32 action, i32 mods){
-        //platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
-        buttons button_val = (buttons)button;
-        bool pressed = action == GLFW_PRESS;
-        input_process_button(button_val,pressed);
-    });
-    glfwSetScrollCallback(pwindow,[](GLFWwindow*pwindow, f64 xoffset, f64 yoffset){
-        //platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
-        if(yoffset != 0.0){
-        i8 z_delta = yoffset <0 ? -1 : 1;
-            input_process_mouse_wheel(z_delta);
+bool platform_system::startup(ccharp application_name, i32 x, i32 y, i32 width, i32 height){
+    if(state_ptr==nullptr){
+        state_ptr = this;
+        if(!glfwInit()){
+            KFATAL("Unable to initialized GLFW!");
+            return false;
         }
-    });
-    glfwSetCursorPosCallback(pwindow,[](GLFWwindow*pwindow,f64 xpos, f64 ypos){
-        //platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
-        input_process_mouse_move((i16)xpos,(i16)ypos);
-    });
-    glfwSetCharCallback(pwindow,[](GLFWwindow*pwindow, u32 keycode){
-        platform*pplatform = (platform*)glfwGetWindowUserPointer(pwindow);
-    });
 
-#if defined(KPLATFORM_WINDOWS)
-    // Clock setup
-    LARGE_INTEGER frequency;
-    QueryPerformanceFrequency(&frequency);
-    clock_frequency = 1.0 / (f64)frequency.QuadPart;
-    QueryPerformanceCounter(&start_time);
-#endif    
+        if(!glfwVulkanSupported()){
+            KFATAL("GLFW doesn't support Vulkan!");
+            return false;
+        }
+
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        GLFWwindow * pwindow = glfwCreateWindow(width,height,application_name,nullptr,nullptr);
+        glfwSetWindowPos(pwindow,x,y);//position window
+
+        glfwSetWindowUserPointer(pwindow,this);
+
+        glfwSetWindowSizeCallback(pwindow,[](GLFWwindow*pwindow, i32 width, i32 height){
+            //platform_system*pplatform = (platform_system*)glfwGetWindowUserPointer(pwindow);
+            event_context context;
+            context.u16[0] = (u16)width;
+            context.u16[1] = (u16)height;
+            event_fire(EVENT_CODE_RESIZED,0,context);
+        });
+
+        glfwSetWindowCloseCallback(pwindow,[](GLFWwindow*pwindow){
+            //platform_system*pplatform = (platform_system*)glfwGetWindowUserPointer(pwindow);
+            event_context data{};
+            event_fire(EVENT_CODE_APPLICATION_QUIT,0,data);
+        });
+
+        glfwSetKeyCallback(pwindow,[](GLFWwindow*pwindow,i32 key, i32 scancode, i32 action, i32 mods){
+            //platform_system*pplatform = (platform_system*)glfwGetWindowUserPointer(pwindow);
+            
+            keys key_val = (keys)key;
+            bool pressed = action == GLFW_PRESS;
+            input_process_key(key_val, pressed);
+
+        });
+        glfwSetMouseButtonCallback(pwindow,[](GLFWwindow*pwindow,i32 button, i32 action, i32 mods){
+            //platform_system*pplatform = (platform_system*)glfwGetWindowUserPointer(pwindow);
+            buttons button_val = (buttons)button;
+            bool pressed = action == GLFW_PRESS;
+            input_process_button(button_val,pressed);
+        });
+        glfwSetScrollCallback(pwindow,[](GLFWwindow*pwindow, f64 xoffset, f64 yoffset){
+            //platform_system*pplatform = (platform_system*)glfwGetWindowUserPointer(pwindow);
+            if(yoffset != 0.0){
+            i8 z_delta = yoffset <0 ? -1 : 1;
+                input_process_mouse_wheel(z_delta);
+            }
+        });
+        glfwSetCursorPosCallback(pwindow,[](GLFWwindow*pwindow,f64 xpos, f64 ypos){
+            //platform_system*pplatform = (platform_system*)glfwGetWindowUserPointer(pwindow);
+            input_process_mouse_move((i16)xpos,(i16)ypos);
+        });
+        glfwSetCharCallback(pwindow,[](GLFWwindow*pwindow, u32 keycode){
+            //platform_system*pplatform = (platform_system*)glfwGetWindowUserPointer(pwindow);
+        });
+
+    #if defined(KPLATFORM_WINDOWS)
+        // Clock setup
+        LARGE_INTEGER frequency;
+        QueryPerformanceFrequency(&frequency);
+        clock_frequency = 1.0 / (f64)frequency.QuadPart;
+        QueryPerformanceCounter(&start_time);
+    #endif    
 
 
-    internal_state = pwindow;
-    return true;
+        state_ptr->internal_state = pwindow;
+        return true;
+    }
+    return false;
 }
 
-void platform::shutdown(){
-    GLFWwindow*pwindow = static_cast<GLFWwindow*>(internal_state);
+void platform_system::shutdown(){
+    GLFWwindow*pwindow = static_cast<GLFWwindow*>(state_ptr->internal_state);
     glfwDestroyWindow(pwindow);
     glfwTerminate();
 }
 
-bool platform::pump_messages(){
-    GLFWwindow*pwindow = static_cast<GLFWwindow*>(internal_state);
+bool platform_system::pump_messages(){
+    if(state_ptr==nullptr)
+        return false;
+
+    GLFWwindow*pwindow = static_cast<GLFWwindow*>(state_ptr->internal_state);
     if(glfwWindowShouldClose(pwindow))
         return false;
     glfwPollEvents();
@@ -109,7 +118,7 @@ bool platform::pump_messages(){
     return true;
 }
 
-void platform::get_required_extensions_names(darray<ccharp>&names_array){
+void platform_system::get_required_extensions_names(darray<ccharp>&names_array){
     u32 count = 0;
     auto ext = glfwGetRequiredInstanceExtensions(&count);
     for(u32 i=0;i<count;i++){
@@ -117,10 +126,14 @@ void platform::get_required_extensions_names(darray<ccharp>&names_array){
     }
 }
 
-bool platform::create_vulkan_surface(vulkan_context*context){
-    GLFWwindow*pwindow = static_cast<GLFWwindow*>(internal_state);
-    VkResult res = glfwCreateWindowSurface(context->instance,   pwindow, nullptr, &context->surface);
-	return res==VK_SUCCESS;
+bool platform_system::create_vulkan_surface(vulkan_context*context){
+    if(state_ptr){
+        GLFWwindow*pwindow = static_cast<GLFWwindow*>(state_ptr->internal_state);
+        VkResult res = glfwCreateWindowSurface(context->instance,   pwindow, nullptr, &context->surface);
+        return res==VK_SUCCESS;
+
+    }
+    return false;
 }
 
 void * platform_allocate(u64 size, bool aligned){

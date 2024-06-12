@@ -2,33 +2,24 @@
 
 #include "core/kmemory.hpp"
 
-event_system s_events;
+event_system*event_system::state_ptr{nullptr};
 
-event_system* event_system::instance(){
-    return &s_events;
-}
-
-bool event_system::initialize(){
-    if(is_initialized){
-        return false;
+void event_system::initialize(){
+    if(state_ptr==nullptr){
+        state_ptr = this;
+        
     }
-
-    is_initialized=false;
-    //kzero_memory(&state, sizeof(state));
-
-    is_initialized=true;
-    return true;
 }
 
 void event_system::shutdown(){
-    //Free the event arrays. And objects pointed to should be destroyed on their own.    
+    state_ptr=nullptr;
 }
 
 bool event_system::register_event(u16 code, void*listener, PFN_on_event on_event){
-    if(!is_initialized){
+    if(!state_ptr){
         return false;
     }
-
+    auto&state = *state_ptr;
     u64 registered_count = state.registered[code].events.length();
     for(u64 i=0; i < registered_count; ++i){
         if(state.registered[code].events[i].listener == listener){
@@ -45,9 +36,10 @@ bool event_system::register_event(u16 code, void*listener, PFN_on_event on_event
 }
 
 bool event_system::unregister_event(u16 code, void* listener, PFN_on_event on_event){
-    if(!is_initialized){
+    if(!state_ptr){
         return false;
     }
+    auto&state = *state_ptr;
 
     u64 registered_count = state.registered[code].events.length();
     //On nothing is registered for the code, boot out.
@@ -68,8 +60,10 @@ bool event_system::unregister_event(u16 code, void* listener, PFN_on_event on_ev
 }
 
 bool event_system::fire(u16 code, void* sender, event_context& context){
-    if(!is_initialized)
+    if(!state_ptr){
         return false;
+    }
+    auto&state = *state_ptr;
     
     u64 registered_count = state.registered[code].events.length();
     //If nothing is registered for the code, boot

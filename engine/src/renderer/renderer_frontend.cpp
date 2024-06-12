@@ -2,9 +2,11 @@
 #include "renderer_backend.hpp"
 #include "core/logger.hpp"
 
-bool renderer::initialize(ccharp application_name,platform*platform_state){
+
+
+bool renderer::initialize(ccharp application_name){
     backend = renderer_backend_create(RENDERER_BACKEND_TYPE_VULKAN);
-    if(!backend || !backend->initialize(application_name,platform_state)){
+    if(!backend || !backend->initialize(application_name)){
         KFATAL("Renderer backend failure to initialize. Shutting down.");
         return false;
     }

@@ -39,7 +39,7 @@ vulkan_renderer_backend::~vulkan_renderer_backend(){
 
 }
 
-bool vulkan_renderer_backend::initialize(ccharp application_name,platform*platform_state){
+bool vulkan_renderer_backend::initialize(ccharp application_name){
     context.allocator = nullptr;
 
     application::get_framebuffer_size(&cached_framebuffer_width, &cached_framebuffer_height);
@@ -61,7 +61,7 @@ bool vulkan_renderer_backend::initialize(ccharp application_name,platform*platfo
 
     //obtain list of required extensions
     darray<ccharp> extensions;
-    platform_state->get_required_extensions_names(extensions);
+    platform_system::get_required_extensions_names(extensions);
     #if defined(_DEBUG)
     extensions.push(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     extensions.push(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
@@ -137,7 +137,7 @@ bool vulkan_renderer_backend::initialize(ccharp application_name,platform*platfo
 
     //Surface
     KDEBUG("Creating Vulkan surface...");
-    if(!platform_state->create_vulkan_surface(&context)){
+    if(!platform_system::create_vulkan_surface(&context)){
         KERROR("Failed to create platform surface!");
         return false;
     }

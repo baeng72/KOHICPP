@@ -15,7 +15,7 @@ protected:
 public:
     renderer_backend(){}
     virtual ~renderer_backend()=default;
-    virtual bool initialize(ccharp application_name,platform*platform_state)=0;
+    virtual bool initialize(ccharp application_name)=0;
     virtual void shutdown()=0;
     virtual bool begin_frame(f32 delta_time)=0;
     virtual bool end_frame(f32 delta_time)=0;

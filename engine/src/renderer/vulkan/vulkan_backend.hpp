@@ -10,7 +10,7 @@ class vulkan_renderer_backend : public renderer_backend{
     public:
     vulkan_renderer_backend();
     virtual ~vulkan_renderer_backend();
-    virtual bool initialize(ccharp application_name,platform*platform)override;
+    virtual bool initialize(ccharp application_name)override;
     virtual void shutdown()override;
     virtual bool begin_frame(f32 delta_time)override;
     virtual bool end_frame(f32 delta_time)override;

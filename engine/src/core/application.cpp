@@ -17,17 +17,27 @@ struct application_state{
     game*game_inst;
     bool is_running;
     bool is_suspended;
-    platform platform;
-    renderer renderer;
+    
+    
     i16 width;
     i16 height;
     clock clock;
     f64 last_time;
     linear_allocator systems_allocator;
 
+    platform_system *pplatform;
+
+    renderer* prenderer;
+
     memory_system*pmemory;
 
-    Log*plogging;
+    logging_system*plogging;
+
+    input_system* pinput;
+
+    event_system* pevent;
+
+
 };
 
 static application_state * app_state;
@@ -51,33 +61,39 @@ bool application::create(game*game_inst){
     u64 systems_allocator_total_size = 64 * 1024 * 1024;//64 MiB
     app_state->systems_allocator.create(systems_allocator_total_size,nullptr);
 
+    app_state->pevent = (event_system*)app_state->systems_allocator.allocate(sizeof(event_system));
+    app_state->pevent = new(app_state->pevent) event_system();//need to run constructor of darray here
+    app_state->pevent->initialize();
     
     //app_state->pmemory = new(pmem) memory_system;//use placement new to call constructor? probably not needed
     app_state->pmemory = (memory_system*)app_state->systems_allocator.allocate(sizeof(memory_system));
+    app_state->pmemory = new(app_state->pmemory) memory_system();//just in case there's something to be constructed
     app_state->pmemory->initialize();
 
-    app_state->plogging = (Log*)app_state->systems_allocator.allocate(sizeof(Log));
+    app_state->plogging = (logging_system*)app_state->systems_allocator.allocate(sizeof(logging_system));
+    app_state->plogging = new(app_state->plogging) logging_system();//just in case there's something to be constructed
     app_state->plogging->initialize();
     //app_state->plogging = new(pmem) Log;
     //initialize subsystems
-    logger_initialize();
     
-    input_initialize();
+    
+    app_state->pinput = (input_system*)app_state->systems_allocator.allocate(sizeof(input_system));
+    app_state->pinput = new(app_state->pinput) input_system();
+    app_state->pinput->initialize();
 
     app_state->is_running=true;
     app_state->is_suspended=false;
     
-    if(!event_initialize()){
-        KERROR("Event system failed initialization. Application cannot continue.");
-        return false;
-    }
-
+    
     event_register(EVENT_CODE_APPLICATION_QUIT, 0, application::on_event);
     event_register(EVENT_CODE_KEY_PRESSED, 0, application::on_key);
     event_register(EVENT_CODE_KEY_RELEASED, 0, application::on_key);
     event_register(EVENT_CODE_RESIZED, 0 , application::on_resized);
 
-    if(!app_state->platform.startup(
+    app_state->pplatform = (platform_system*)app_state->systems_allocator.allocate(sizeof(platform_system));
+    app_state->pplatform = new(app_state->pplatform) platform_system();
+
+    if(!app_state->pplatform->startup(
         game_inst->app_config.name,
         game_inst->app_config.start_pos_x,
         game_inst->app_config.start_pos_y,
@@ -86,7 +102,9 @@ bool application::create(game*game_inst){
         return false;
     }
 
-    if(!app_state->renderer.initialize(game_inst->app_config.name,&app_state->platform)){
+    app_state->prenderer = (renderer*)app_state->systems_allocator.allocate(sizeof(renderer));
+    app_state->prenderer = new(app_state->prenderer) renderer();
+    if(!app_state->prenderer->initialize(game_inst->app_config.name)){
         KFATAL("Failed to initialize renderer. Aborting application");
         return false;
     }
@@ -114,7 +132,7 @@ bool application::run(){
     f64 target_frame_seconds = 1.f/60;
     KINFO(get_memory_usage_str());
     while(state.is_running){
-        if(!state.platform.pump_messages()){
+        if(!state.pplatform->pump_messages()){
             state.is_running = false;
         }
 
@@ -140,7 +158,7 @@ bool application::run(){
 
             renderer_packet packet;
             packet.delta_time = (f32)delta;
-            state.renderer.draw_frame(&packet);
+            state.prenderer->draw_frame(&packet);
 
             //Figure out how long the frame took and, if below
             f64 frame_end_time = platform_get_absolute_time();
@@ -168,10 +186,15 @@ bool application::run(){
     event_unregister(EVENT_CODE_APPLICATION_QUIT,0,application::on_event);
     event_unregister(EVENT_CODE_KEY_PRESSED, 0, application::on_key);
     event_unregister(EVENT_CODE_KEY_RELEASED, 0, application::on_key);
-    event_shutdown();
-    input_shutdown();
-    state.renderer.shutdown();
-    state.platform.shutdown();
+    
+    state.pinput->shutdown();
+    
+    state.prenderer->shutdown();
+    state.pplatform->shutdown();
+
+    state.pmemory->shutdown();
+    state.plogging->shutdown();
+    state.pevent->shutdown();
 
     return true;
 }
@@ -245,7 +268,7 @@ bool application::on_resized(u16 code, void*sender, void * listener_inst, event_
                     state.is_suspended = false;
                 }
                 state.game_inst->on_resize(width,height);
-                state.renderer.on_resized(width,height);
+                state.prenderer->on_resized(width,height);
             }
         }
     }

@@ -37,18 +37,17 @@ class KAPI event_system{
     struct event_code_entry{
         darray<registered_event> events;
     };
-    struct event_system_state{
-        //Lookup table for event codes.
-        event_code_entry registered[MAX_MESSAGE_CODES];
-    }state;
-    bool is_initialized{false};
+   
+    //Lookup table for event codes.
+    event_code_entry registered[MAX_MESSAGE_CODES];        
+    static event_system* state_ptr;
     public:
     static event_system*instance();
-    bool initialize();
+    void initialize();
     void shutdown();
-    bool register_event(u16 code, void* listener, PFN_on_event on_event);
-    bool unregister_event(u16 code, void*listener, PFN_on_event on_event);
-    bool fire(u16 code, void*sender, event_context&context);
+    static bool register_event(u16 code, void* listener, PFN_on_event on_event);
+    static bool unregister_event(u16 code, void*listener, PFN_on_event on_event);
+    static bool fire(u16 code, void*sender, event_context&context);
 };
 
 enum system_event_code{
@@ -86,8 +85,6 @@ enum system_event_code{
 
 };
 
-#define event_initialize() (event_system::instance()->initialize())
-#define event_shutdown() (event_system::instance()->shutdown())
-#define event_fire(c,s,ev) (event_system::instance()->fire((c),(s),(ev)))
-#define event_register(c,l,on)(event_system::instance()->register_event((c),(l),(on)))
-#define event_unregister(c,l,on)(event_system::instance()->unregister_event((c),(l),(on)))
+#define event_fire(c,s,ev) (event_system::fire((c),(s),(ev)))
+#define event_register(c,l,on)(event_system::register_event((c),(l),(on)))
+#define event_unregister(c,l,on)(event_system::unregister_event((c),(l),(on)))

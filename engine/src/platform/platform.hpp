@@ -5,14 +5,15 @@
 
 struct vulkan_context;
 
-class KAPI platform{
+class KAPI platform_system{
     void* internal_state;
+    static platform_system*state_ptr;
     public:
     bool startup(ccharp application_name,i32 x, i32 y, i32 width, i32 height);
     void shutdown();
-    void get_required_extensions_names(darray<ccharp>&names_array);
-    bool create_vulkan_surface(vulkan_context*context);
-    bool pump_messages();
+    static void get_required_extensions_names(darray<ccharp>&names_array);
+    static bool create_vulkan_surface(vulkan_context*context);
+    static bool pump_messages();
 };
 
 

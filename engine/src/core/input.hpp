@@ -279,7 +279,7 @@ enum keys{
 };
 #endif
 
-class KAPI input{
+class KAPI input_system{
     struct keyboard_state{
         #if defined (KPLATFORM_GLFW)
         bool keys[KEY_LAST];
@@ -293,51 +293,49 @@ class KAPI input{
         i16 y;
         bool buttons[BUTTON_MAX_BUTTONS];
     };
-    struct input_state{
-        keyboard_state keyboard_current;
-        keyboard_state keyboard_previous;
-        mouse_state mouse_current;
-        mouse_state mouse_previous;
-    };
-    input_state  state;
+    
+    keyboard_state keyboard_current;
+    keyboard_state keyboard_previous;
+    mouse_state mouse_current;
+    mouse_state mouse_previous;
+    static input_system*state_ptr;
     bool initialized{false};
-    public:    
-    static input*instance();
+    public:        
     void initialize();
     void shutdown();
-    void update(f64 delta_time);
+    static void update(f64 delta_time);
 
     //keyboard input
-    bool is_key_down(keys key);
-    bool is_key_up(keys key);
-    bool was_key_up(keys key);
-    bool was_key_down(keys key);
+    static bool is_key_down(keys key);
+    static bool is_key_up(keys key);
+    static bool was_key_up(keys key);
+    static bool was_key_down(keys key);
 
-    void process_key(keys key, bool pressed);
+    static void process_key(keys key, bool pressed);
 
     //mouse input
-    bool is_button_down(buttons button);
-    bool is_button_up(buttons button);
-    bool was_button_down(buttons button);
-    bool was_button_up(buttons button);
-    void get_mouse_position(i32*x, i32*y);
-    void get_mouse_position(i32&x, i32&y);
-    void get_previous_mouse_position(i32*x,i32*y);
-    void get_previous_mouse_position(i32&x,i32&y);
+    static bool is_button_down(buttons button);
+    static bool is_button_up(buttons button);
+    static bool was_button_down(buttons button);
+    static bool was_button_up(buttons button);
+    static void get_mouse_position(i32*x, i32*y);
+    static void get_mouse_position(i32&x, i32&y);
+    static void get_previous_mouse_position(i32*x,i32*y);
+    static void get_previous_mouse_position(i32&x,i32&y);
 
-    void process_button(buttons button, bool pressed);
-    void process_mouse_move(i16 x, i16 y);
-    void process_mouse_wheel(i8 z_delta);
+    static void process_button(buttons button, bool pressed);
+    static void process_mouse_move(i16 x, i16 y);
+    static void process_mouse_wheel(i8 z_delta);
 };
 
-#define input_initialize() (input::instance()->initialize())
-#define input_shutdown() (input::instance()->shutdown())
-#define input_update(delta) (input::instance()->update(delta))
-#define input_process_key(k,p) (input::instance()->process_key((k),(p)))
-#define input_process_button(b,p)(input::instance()->process_button((b),(p)))
-#define input_process_mouse_move(x,y)(input::instance()->process_mouse_move((x),(y)))
-#define input_process_mouse_wheel(z)(input::instance()->process_mouse_wheel((z)))
-#define input_is_key_up(k)(input::instance()->is_key_up(k))
-#define input_is_key_down(k)(input::instance()->is_key_down(k))
-#define input_was_key_up(k)(input::instance()->was_key_up(k))
-#define input_was_key_down(k)(input::instance()->was_key_down(k))
+//#define input_initialize() (input_system::initialize())
+//#define input_shutdown() (input_system::shutdown())
+#define input_update(delta) (input_system::update(delta))
+#define input_process_key(k,p) (input_system::process_key((k),(p)))
+#define input_process_button(b,p)(input_system::process_button((b),(p)))
+#define input_process_mouse_move(x,y)(input_system::process_mouse_move((x),(y)))
+#define input_process_mouse_wheel(z)(input_system::process_mouse_wheel((z)))
+#define input_is_key_up(k)(input_system::is_key_up(k))
+#define input_is_key_down(k)(input_system::is_key_down(k))
+#define input_was_key_up(k)(input_system::was_key_up(k))
+#define input_was_key_down(k)(input_system::was_key_down(k))

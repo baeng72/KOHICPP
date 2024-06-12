@@ -7,31 +7,23 @@
 #include <cstring>
 #include <cstdarg>
 
-Log s_log;
+
 static constexpr u32 k_log_size=32000;
 static char log_buffer[k_log_size];
 
-Log::Log(){
+static logging_system* state_ptr{nullptr};
 
-}
-
-Log::~Log(){
-
-}
-
-Log* Log::instance(){
-    return &s_log;
-}
-
-bool Log::initialize(){
+bool logging_system::initialize(){
+    state_ptr = this;
+    initialized = true;
     return true;
 }
 
-void Log::shutdown(){
-
+void logging_system::shutdown(){
+    state_ptr=nullptr;
 }
 
-void Log::log_output(log_level level, ccharp message, ...){
+void logging_system::log_output(log_level level, ccharp message, ...){
     ccharp level_strings[] = {"[FATAL]: ", "[ERROR]: ", "[WARN]:  ", "[INFO]:  ", "[DEBUG]: ", "[TRACE]: "};
     bool is_error = level < LOG_LEVEL_WARN;
 
@@ -57,5 +49,5 @@ void Log::log_output(log_level level, ccharp message, ...){
 
 
 void report_assertion_failure(ccharp expression, ccharp message, ccharp file, ccharp function, i32 line){
-    Log::instance()->log_output(LOG_LEVEL_FATAL, "Assertion Failure: %s, message: %s, in file: %s, function %s, line %d\n", expression, message, file, function, line);
+    logging_system::log_output(LOG_LEVEL_FATAL, "Assertion Failure: %s, message: %s, in file: %s, function %s, line %d\n", expression, message, file, function, line);
 }
