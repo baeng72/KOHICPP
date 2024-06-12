@@ -332,7 +332,12 @@ class KAPI input{
 
 #define input_initialize() (input::instance()->initialize())
 #define input_shutdown() (input::instance()->shutdown())
+#define input_update(delta) (input::instance()->update(delta))
 #define input_process_key(k,p) (input::instance()->process_key((k),(p)))
 #define input_process_button(b,p)(input::instance()->process_button((b),(p)))
 #define input_process_mouse_move(x,y)(input::instance()->process_mouse_move((x),(y)))
 #define input_process_mouse_wheel(z)(input::instance()->process_mouse_wheel((z)))
+#define input_is_key_up(k)(input::instance()->is_key_up(k))
+#define input_is_key_down(k)(input::instance()->is_key_down(k))
+#define input_was_key_up(k)(input::instance()->was_key_up(k))
+#define input_was_key_down(k)(input::instance()->was_key_down(k))

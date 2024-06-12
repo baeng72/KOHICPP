@@ -13,7 +13,18 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/engine/src/debug",
             "environment": [],
-            "console": "externalTerminal"
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "(Windows) Launch Tests",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/tests/src/debug/tests.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/engine/src/debug",
+            "environment": [],
+            "console": "integratedTerminal"
         }
 
     ]

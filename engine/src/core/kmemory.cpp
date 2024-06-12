@@ -3,12 +3,14 @@
 #include "core/logger.hpp"
 #include "platform/platform.hpp"
 
+
 #include <cstring>
 #include <cstdio>
 
 ccharp memory_system::memory_tag_strings[MEMORY_TAG_MAX_TAGS]={
     "UNKNOWN    ",
     "ARRAY      ",
+    "LINEARALLOC",
     "DARRAY     ",
     "DICT       ",
     "RING_QUEUE ",
@@ -28,15 +30,15 @@ ccharp memory_system::memory_tag_strings[MEMORY_TAG_MAX_TAGS]={
 
 
 
-memory_system*memory_system::instance(){
-    static memory_system mem_system;
-    return &mem_system;
-}
+memory_system * state_ptr{nullptr};
 
-
-void memory_system::initialize(){
-    total_allocated=0;
-    platform_zero_memory(tagged_allocations,sizeof(tagged_allocations));
+void memory_system::initialize(){    
+    if(state_ptr==nullptr){
+        total_allocated=0;
+        alloc_count=0;
+        platform_zero_memory(tagged_allocations,sizeof(tagged_allocations));
+        state_ptr=this;
+    }
 }
 
 void memory_system::shutdown(){
@@ -47,10 +49,11 @@ void* memory_system::allocate(u64 size, memory_tag tag){
     if(tag == MEMORY_TAG_UNKNOWN){
         KWARN("kallocate called using MEMORY_TAG_UNKNOWN. Re-class this allocation.");
     }
-
-    total_allocated += size;
-    tagged_allocations[tag] += size;
-
+    if(state_ptr){
+        state_ptr->total_allocated += size;
+        state_ptr->tagged_allocations[tag] += size;
+        state_ptr->alloc_count++;
+    }
     //TODO: memory alignment
     void * block = platform_allocate(size,false);
     platform_zero_memory(block, size);
@@ -61,9 +64,10 @@ void memory_system::free(void* block, u64 size, memory_tag tag){
     if(tag == MEMORY_TAG_UNKNOWN){
         KWARN("kfree called using MEMORY_TAG_UNKNOWN. Re class this allocation.");
     }
-
-    total_allocated -= size;
-    tagged_allocations[tag] -= size;
+    if(state_ptr){
+        state_ptr->total_allocated -= size;
+        state_ptr->tagged_allocations[tag] -= size;
+    }
 
     //TODO: memory alignment
     platform_free(block,false);
@@ -80,6 +84,13 @@ inline void * memory_system::copy_memory(void * dest,const void * src, u64 size)
 
 inline void * memory_system::set_memory(void * dest, i32 value, u64 size){
     return platform_set_memory(dest, value, size);
+}
+
+char * memory_system::getmemoryusagestr(){
+    if(state_ptr){
+        return state_ptr->getMemoryUsageStr();
+    }
+    return nullptr;
 }
 
 
@@ -120,4 +131,10 @@ char * memory_system::getMemoryUsageStr(void){
     }
     char * out_string = _strdup(buffer);
     return out_string;
+}
+
+u64 memory_system::getMemoryAllocCount(){
+    if(state_ptr)
+        return state_ptr->alloc_count;
+    return 0ul;
 }

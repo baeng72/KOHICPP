@@ -8,6 +8,7 @@ include_directories(AFTER ${Vulkan_INCLUDE_DIRS})
 include_directories(engine/src)
 add_subdirectory(engine/src)
 add_subdirectory(testbed/src)
+add_subdirectory(tests/src)
 
 
 

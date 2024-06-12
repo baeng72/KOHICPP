@@ -29,6 +29,23 @@ void input::update(f64 delta_time){
 }
 
 void input::process_key(keys key, bool pressed){
+        if (key == KEY_LEFT_ALT) {
+        KINFO("Left alt pressed.");
+    } else if (key == KEY_RIGHT_ALT) {
+        KINFO("Right alt pressed.");
+    }
+
+    if (key == KEY_LEFT_CONTROL) {
+        KINFO("Left ctrl pressed.");
+    } else if (key == KEY_RIGHT_CONTROL) {
+        KINFO("Right ctrl pressed.");
+    }
+
+    if (key == KEY_LEFT_SHIFT) {
+        KINFO("Left shift pressed.");
+    } else if (key == KEY_RIGHT_SHIFT) {
+        KINFO("Right shift pressed.");
+    }
     //Only handle this if the state actually changed
     if(state.keyboard_current.keys[key]!= pressed){
         //Update internal state

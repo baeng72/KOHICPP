@@ -4,7 +4,7 @@
 
 #include "defines.hpp"
 
-struct clock{
+struct KAPI clock{
     f64 start_time;
     f64 elapsed;    
     void start();

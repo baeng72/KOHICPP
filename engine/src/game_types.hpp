@@ -2,8 +2,11 @@
 
 #include "core/application.hpp"
 
+struct application_state;
 struct game{
     application_config app_config;
+
+    application_state* application_state{nullptr};
 
     virtual bool initialize()=0;
 

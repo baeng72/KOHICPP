@@ -1,0 +1,2 @@
+file(GLOB MEMORY_FILES "*.cpp" "*.hpp")
+set(MEMORY_FILES ${MEMORY_FILES} PARENT_SCOPE)

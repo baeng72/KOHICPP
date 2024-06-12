@@ -21,9 +21,14 @@ add_subdirectory(core)
 add_subdirectory(platform)
 add_subdirectory(renderer)
 add_subdirectory(math)
+add_subdirectory(memory)
 add_definitions(-DKEXPORT)
 
-add_library(KOHICPP SHARED ${SRC_FILES} ${CORE_FILES} ${PLATFORM_FILES} ${CONTAINER_FILES} ${RENDERER_FILES} ${MATH_FILES})
+add_library(KOHICPP SHARED ${SRC_FILES} ${CORE_FILES} ${PLATFORM_FILES} ${CONTAINER_FILES} ${RENDERER_FILES} ${MATH_FILES} ${MEMORY_FILES})
 
 target_link_libraries(KOHICPP glfw)
 
+
+if(WIN32)
+    add_custom_command(TARGET KOHICPP POST_BUILD COMMAND cmd //c "${PROJECT_SRC_DIR}/post-build.bat")
+endif()    

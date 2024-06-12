@@ -5,6 +5,7 @@
 enum memory_tag{
      MEMORY_TAG_UNKNOWN,
     MEMORY_TAG_ARRAY,
+    MEMORY_TAG_LINEAR_ALLOCATOR,
     MEMORY_TAG_DARRAY,
     MEMORY_TAG_DICT,
     MEMORY_TAG_RING_QUEUE,
@@ -28,17 +29,17 @@ class KAPI memory_system{
     static ccharp memory_tag_strings[];
     u64 total_allocated{0};
     u64 tagged_allocations[MEMORY_TAG_MAX_TAGS];
-    memory_system(){}
+    u64 alloc_count{0};
+    
+    
     char* getMemoryUsageStr();
-    public:
-    memory_system(memory_system const&)=delete;
-    void operator=(memory_system const&)=delete;
-    char* get_memory_usage_str() { return getMemoryUsageStr(); }//compiler complains when I implement get_memory_usage_str(), so call another?
-    static memory_system*instance();
+    public:    
+    static char* getmemoryusagestr();
+    static u64 getMemoryAllocCount();
     void initialize();
     void shutdown();
-    void *allocate(u64 size, memory_tag tag);
-    void free(void*block, u64 size, memory_tag tag);
+    static void *allocate(u64 size, memory_tag tag);
+    static void free(void*block, u64 size, memory_tag tag);
    
     static void* zero_memory(void*block,u64 size);
     static void * copy_memory(void*dest, const void*source, u64 size);
@@ -46,9 +47,10 @@ class KAPI memory_system{
 
 };
 
-#define kallocate(size, tag) (memory_system::instance()->allocate((size),(tag)))
-#define kfree(block, size, tag) (memory_system::instance()->free((block),(size),(tag)))
+#define kallocate(size, tag) (memory_system::allocate((size),(tag)))
+#define kfree(block, size, tag) (memory_system::free((block),(size),(tag)))
 #define kzero_memory(block, size) (memory_system::zero_memory((block),(size)))
 #define kcopy_memory(dest,source,size) (memory_system::copy_memory((dest),(source),(size)))
 #define kset_memory(dest, value, size) (memory_system::set_memory((dest), (value), (size)))
-#define get_memory_usage_str() (memory_system::instance()->get_memory_usage_str())
+#define get_memory_usage_str() (memory_system::getmemoryusagestr())
+#define get_memory_alloc_count()(memory_system::getMemoryAllocCount())
